@@ -5,3 +5,5 @@ __pycache__/
 
 # Env files
 .env
+
+static/
