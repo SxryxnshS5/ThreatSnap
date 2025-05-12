@@ -24,6 +24,18 @@
         background: #222;
         border-radius: 8px;
       }
+      .source-preview-container {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+      }
+      .source-section {
+        flex: 1;
+      }
+      .viewer {
+        max-width: 800px;
+        margin-top: 0.5rem;
+      }
       select,
       input,
       button,
@@ -51,6 +63,10 @@
       .status-stopped {
         color: red;
       }
+      video {
+        width: 100%;
+        border-radius: 8px;
+      }
     </style>
   </head>
   <body>
@@ -76,23 +92,37 @@
         <input name="email" placeholder="you@example.com" /><br />
       </div>
 
-      <label>Source:</label><br />
-      <select
-        id="sourceSelector"
-        name="source"
-        onchange="toggleVideoDropdown(this.value)"
-      >
-        <option value="webcam">Webcam</option>
-        <option value="video">Video File</option></select
-      ><br />
+      <div class="source-preview-container">
+        <div class="source-section">
+          <label>Source:</label><br />
+          <select
+            id="sourceSelector"
+            name="source"
+            onchange="toggleVideoDropdown(this.value)"
+          >
+            <option value="webcam">Webcam</option>
+            <option value="video">Video File</option></select
+          ><br />
 
-      <div id="videoPicker" style="display: none">
-        <label>Select video file:</label><br />
-        <select name="filename">
-          {% for file in video_files %}
-          <option value="{{ file }}">{{ file }}</option>
-          {% endfor %}</select
-        ><br />
+          <div id="videoPicker" style="display: none">
+            <label>Select video file:</label><br />
+            <select
+              id="videoFileSelect"
+              name="filename"
+              onchange="previewVideo(this.value)"
+            >
+              <option value="">-- Select a video --</option>
+              {% for file in video_files %}
+              <option value="{{ file }}">{{ file }}</option>
+              {% endfor %}</select
+            ><br />
+          </div>
+        </div>
+
+        <div class="viewer" id="videoViewer" style="display: none">
+          <h4>🎞️ Preview</h4>
+          <video id="videoPlayer" controls></video>
+        </div>
       </div>
 
       <button type="submit" id="startBtn">Start Monitoring</button>
@@ -123,14 +153,35 @@
 
     <script>
       function toggleVideoDropdown(value) {
-        document.getElementById('videoPicker').style.display =
-          value === 'video' ? 'block' : 'none'
+        const videoPicker = document.getElementById('videoPicker')
+        const viewer = document.getElementById('videoViewer')
+        const player = document.getElementById('videoPlayer')
+
+        if (value === 'video') {
+          videoPicker.style.display = 'block'
+        } else {
+          videoPicker.style.display = 'none'
+          viewer.style.display = 'none'
+          player.src = ''
+        }
       }
 
       function toggleEmailField(enabled) {
         document.getElementById('emailField').style.display = enabled
           ? 'block'
           : 'none'
+      }
+
+      function previewVideo(filename) {
+        const viewer = document.getElementById('videoViewer')
+        const player = document.getElementById('videoPlayer')
+        if (filename) {
+          player.src = `/static/videos/${filename}`
+          viewer.style.display = 'block'
+        } else {
+          viewer.style.display = 'none'
+          player.src = ''
+        }
       }
 
       function fetchLogs() {
