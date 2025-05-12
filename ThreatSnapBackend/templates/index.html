@@ -15,7 +15,9 @@
         color: #f33;
       }
       form,
-      .logs {
+      .logs,
+      .alerts,
+      .all-logs {
         margin-top: 1rem;
         padding: 1rem;
         background: #222;
@@ -27,10 +29,15 @@
         padding: 0.5rem;
         margin: 0.5rem 0;
       }
-      .logs {
+      .logs,
+      .alerts,
+      .all-logs {
         max-height: 300px;
         overflow-y: auto;
         font-family: monospace;
+      }
+      a {
+        color: #4af;
       }
     </style>
   </head>
@@ -73,6 +80,16 @@
       <pre id="logbox">Loading...</pre>
     </div>
 
+    <div class="alerts">
+      <h3>⚠️ Critical Alerts</h3>
+      <ul id="criticalList"></ul>
+    </div>
+
+    <div class="all-logs">
+      <h3>📁 All Logs</h3>
+      <ul id="allLogsList"></ul>
+    </div>
+
     <script>
       function toggleVideoDropdown(value) {
         document.getElementById('videoPicker').style.display =
@@ -87,8 +104,54 @@
           })
       }
 
+      function fetchCriticalAlerts() {
+        fetch('/logs/action-required')
+          .then((res) => res.json())
+          .then((data) => {
+            const list = document.getElementById('criticalList')
+            list.innerHTML = ''
+            if (data.length === 0) {
+              list.innerHTML = '<li>No critical alerts.</li>'
+            } else {
+              data.forEach((entry) => {
+                const li = document.createElement('li')
+                li.innerHTML = `<b>${entry.timestamp}</b><br>
+                <a href="/images/${entry.image}" target="_blank">Image</a> |
+                <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
+                Danger: ${entry.analysis.danger}`
+                list.appendChild(li)
+              })
+            }
+          })
+      }
+
+      function fetchAllLogs() {
+        fetch('/logs')
+          .then((res) => res.json())
+          .then((data) => {
+            const list = document.getElementById('allLogsList')
+            list.innerHTML = ''
+            if (data.length === 0) {
+              list.innerHTML = '<li>No logs available.</li>'
+            } else {
+              data.forEach((entry) => {
+                const li = document.createElement('li')
+                li.innerHTML = `<b>${entry.timestamp}</b><br>
+                <a href="/images/${entry.image}" target="_blank">Image</a> |
+                <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
+                Danger: ${entry.analysis.danger}`
+                list.appendChild(li)
+              })
+            }
+          })
+      }
+
       setInterval(fetchLogs, 1000)
+      setInterval(fetchCriticalAlerts, 3000)
+      setInterval(fetchAllLogs, 5000)
       fetchLogs()
+      fetchCriticalAlerts()
+      fetchAllLogs()
     </script>
   </body>
 </html>

@@ -64,6 +64,17 @@ def list_logs():
                 logs.append(data)
     return jsonify(sorted(logs, key=lambda x: x["timestamp"], reverse=True))
 
+@app.route("/logs/action-required")
+def logs_action_required():
+    flagged = []
+    for filename in os.listdir(SAVE_DIR):
+        if filename.endswith(".json"):
+            with open(os.path.join(SAVE_DIR, filename), "r") as f:
+                data = json.load(f)
+                if data.get("analysis", {}).get("action_required"):
+                    flagged.append(data)
+    return jsonify(sorted(flagged, key=lambda x: x["timestamp"], reverse=True))
+
 @app.route("/logs/live")
 def live_logs():
     return jsonify(runtime_logs[-100:])
