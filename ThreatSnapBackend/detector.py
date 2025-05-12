@@ -9,6 +9,12 @@ from ultralytics import YOLO
 from processor import process_screenshot
 from emailer import send_alert_email
 
+runtime_logs = []
+
+def log(msg):
+    print(msg)
+    runtime_logs.append(msg)
+
 class HumanMovementDetector:
     def __init__(self, video_source=0):
         self.video_source = video_source
@@ -47,11 +53,13 @@ class HumanMovementDetector:
 
     def _detect_loop(self):
         cap = cv2.VideoCapture(self.video_source)
+        log(f"[STARTED] Monitoring source: {self.video_source}")
         while self.running and cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
 
+            cv2.imwrite("static/current_frame.jpg", frame)
             results = self.model(frame)
             curr_boxes = self.extract_person_boxes(results)
 
@@ -63,10 +71,7 @@ class HumanMovementDetector:
                     image_path = os.path.join(self.output_dir, image_filename)
                     cv2.imwrite(image_path, frame)
 
-                    # Analyze
                     analysis = process_screenshot(image_path)
-
-                    # Save log
                     log_filename = f"{timestamp_str}.json"
                     log_path = os.path.join(self.output_dir, log_filename)
                     with open(log_path, 'w') as log_file:
@@ -76,9 +81,8 @@ class HumanMovementDetector:
                             "analysis": analysis
                         }, log_file, indent=2)
 
-                    print(f"[LOGGED] {image_filename}")
+                    log(f"[LOGGED] {image_filename} | Action: {analysis.get('action_required')} | Danger: {analysis.get('danger')}")
 
-                    # Send email if action required
                     if self.user_email and analysis.get("action_required"):
                         subject = "🔴 ThreatSnap Alert – Action Required"
                         body = (
@@ -101,6 +105,7 @@ class HumanMovementDetector:
             time.sleep(0.1)
 
         cap.release()
+        log("[STOPPED] Monitoring session ended.")
 
     def start(self, email=None):
         if not self.running:
