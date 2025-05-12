@@ -1,3 +1,4 @@
+<!-- index.html (updated) -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -148,14 +149,13 @@
       </p>
       <p><strong>How to use:</strong></p>
       <ol>
-        <li>Select a source: Webcam or Video File</li>
+        <li>Select a video file</li>
         <li>Enable email alerts (optional)</li>
         <li>Click <em>Start Monitoring</em> to begin</li>
         <li>Tool detects human movement and takes screenshots</li>
         <li>It analyzes each screenshot for danger and logs it</li>
         <li>If needed, it emails you an alert with the log & image</li>
       </ol>
-      <p>You can stop the monitoring or reset all logs/screenshots.</p>
     </div>
 
     <div class="status" id="monitoringStatus">
@@ -179,38 +179,17 @@
           <input name="email" placeholder="you@example.com" /><br />
         </div>
 
-        <div class="source-preview-container">
-          <div class="source-section">
-            <label>Source:</label><br />
-            <select
-              id="sourceSelector"
-              name="source"
-              onchange="toggleVideoDropdown(this.value)"
-            >
-              <option value="webcam">Webcam</option>
-              <option value="video">Video File</option></select
-            ><br />
+        <label>Select video file:</label><br />
+        <select name="filename" onchange="previewVideo(this.value)">
+          <option value="">-- Select a video --</option>
+          {% for file in video_files %}
+          <option value="{{ file }}">{{ file }}</option>
+          {% endfor %}</select
+        ><br />
 
-            <div id="videoPicker" style="display: none">
-              <label style="margin-bottom: 0.5rem">Select video file:</label
-              ><br />
-              <select
-                id="videoFileSelect"
-                name="filename"
-                onchange="previewVideo(this.value)"
-              >
-                <option value="">-- Select a video --</option>
-                {% for file in video_files %}
-                <option value="{{ file }}">{{ file }}</option>
-                {% endfor %}</select
-              ><br />
-            </div>
-          </div>
-
-          <div class="viewer" id="videoViewer" style="display: none">
-            <h4>🎞️ Preview</h4>
-            <video id="videoPlayer" controls></video>
-          </div>
+        <div class="viewer" id="videoViewer" style="display: none">
+          <h4>🎥 Preview</h4>
+          <video id="videoPlayer" controls></video>
         </div>
 
         <button type="submit" id="startBtn">Start Monitoring</button>
@@ -244,20 +223,6 @@
       function toggleInfo() {
         const modal = document.getElementById('infoModal')
         modal.style.display = modal.style.display === 'block' ? 'none' : 'block'
-      }
-
-      function toggleVideoDropdown(value) {
-        const videoPicker = document.getElementById('videoPicker')
-        const viewer = document.getElementById('videoViewer')
-        const player = document.getElementById('videoPlayer')
-
-        if (value === 'video') {
-          videoPicker.style.display = 'block'
-        } else {
-          videoPicker.style.display = 'none'
-          viewer.style.display = 'none'
-          player.src = ''
-        }
       }
 
       function toggleEmailField(enabled) {
@@ -357,8 +322,6 @@
       fetchCriticalAlerts()
       fetchAllLogs()
       fetchStatus()
-
-      toggleVideoDropdown(document.getElementById('sourceSelector').value)
     </script>
   </body>
 </html>

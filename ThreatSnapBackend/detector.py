@@ -1,3 +1,4 @@
+# detector.py
 import cv2
 import time
 import threading
@@ -16,7 +17,7 @@ def log(msg):
     runtime_logs.append(msg)
 
 class HumanMovementDetector:
-    def __init__(self, video_source=0):
+    def __init__(self, video_source):
         self.video_source = video_source
         self.model = YOLO("yolov8n.pt")
         self.running = False
@@ -65,7 +66,6 @@ class HumanMovementDetector:
             if current_video_time - self.last_trigger_video_time < self.cooldown:
                 continue  # Skip frame due to cooldown
 
-            cv2.imwrite("static/current_frame.jpg", frame)
             results = self.model(frame)
             curr_boxes = self.extract_person_boxes(results)
 

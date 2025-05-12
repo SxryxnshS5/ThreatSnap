@@ -5,5 +5,7 @@ __pycache__/
 
 # Env files
 .env
+.jpg
+.json
 
-static/
+/static/saves
