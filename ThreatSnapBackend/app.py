@@ -23,7 +23,8 @@ def home():
 @app.route("/start", methods=["POST"])
 def start_detection():
     data = request.form
-    email = data.get("email")
+    email_alert_enabled = data.get("enable_email") == "on"
+    email = data.get("email") if email_alert_enabled else None
     source = data.get("source")
     filename = data.get("filename")
 

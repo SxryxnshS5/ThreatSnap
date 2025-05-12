@@ -22,8 +22,8 @@ class HumanMovementDetector:
         self.running = False
         self.thread = None
         self.prev_boxes = []
-        self.cooldown = 3
-        self.last_trigger_time = 0
+        self.cooldown = 5  # seconds
+        self.last_trigger_video_time = -float('inf')
         self.user_email = None
         self.output_dir = "static/saves"
         os.makedirs(self.output_dir, exist_ok=True)
@@ -57,33 +57,40 @@ class HumanMovementDetector:
         while self.running and cap.isOpened():
             ret, frame = cap.read()
             if not ret:
+                log("[VIDEO END] Stopping monitoring as video has ended.")
+                self.running = False
                 break
+
+            current_video_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
+            if current_video_time - self.last_trigger_video_time < self.cooldown:
+                continue  # Skip frame due to cooldown
 
             cv2.imwrite("static/current_frame.jpg", frame)
             results = self.model(frame)
             curr_boxes = self.extract_person_boxes(results)
 
             if self.has_movement(self.prev_boxes, curr_boxes):
-                now = time.time()
-                if now - self.last_trigger_time > self.cooldown:
-                    timestamp_str = datetime.fromtimestamp(now).strftime("%Y%m%d_%H%M%S")
-                    image_filename = f"{timestamp_str}.jpg"
-                    image_path = os.path.join(self.output_dir, image_filename)
-                    cv2.imwrite(image_path, frame)
+                timestamp_str = datetime.fromtimestamp(time.time()).strftime("%Y%m%d_%H%M%S")
+                image_filename = f"{timestamp_str}.jpg"
+                image_path = os.path.join(self.output_dir, image_filename)
+                cv2.imwrite(image_path, frame)
 
-                    analysis = process_screenshot(image_path)
-                    log_filename = f"{timestamp_str}.json"
-                    log_path = os.path.join(self.output_dir, log_filename)
-                    with open(log_path, 'w') as log_file:
-                        json.dump({
-                            "timestamp": timestamp_str,
-                            "image": image_filename,
-                            "analysis": analysis
-                        }, log_file, indent=2)
+                analysis = process_screenshot(image_path)
+                log_filename = f"{timestamp_str}.json"
+                log_path = os.path.join(self.output_dir, log_filename)
+                with open(log_path, 'w') as log_file:
+                    json.dump({
+                        "timestamp": timestamp_str,
+                        "image": image_filename,
+                        "analysis": analysis
+                    }, log_file, indent=2)
 
-                    log(f"[LOGGED] {image_filename} | Action: {analysis.get('action_required')} | Danger: {analysis.get('danger')}")
+                log(f"[LOGGED] {image_filename} | Action: {analysis.get('action_required')} | Danger: {analysis.get('danger')}")
 
-                    if self.user_email and analysis.get("action_required"):
+                if analysis.get("action_required"):
+                    self.last_trigger_video_time = current_video_time
+
+                    if self.user_email:
                         subject = "🔴 ThreatSnap Alert – Action Required"
                         body = (
                             f"Timestamp: {analysis['timestamp']}\n\n"
@@ -97,12 +104,9 @@ class HumanMovementDetector:
                             body=body,
                             attachments=[image_path, log_path]
                         )
-                        time.sleep(5)
-
-                    self.last_trigger_time = now
 
             self.prev_boxes = curr_boxes
-            time.sleep(0.1)
+            time.sleep(0.05)
 
         cap.release()
         log("[STOPPED] Monitoring session ended.")

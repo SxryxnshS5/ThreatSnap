@@ -1,157 +1,139 @@
 {# templates/index.html #}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>ThreatSnap Control Panel</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        padding: 2rem;
-        background: #111;
-        color: white;
-      }
-      h1 {
-        color: #f33;
-      }
-      form,
-      .logs,
-      .alerts,
-      .all-logs {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: #222;
-        border-radius: 8px;
-      }
-      select,
-      input,
-      button {
-        padding: 0.5rem;
-        margin: 0.5rem 0;
-      }
-      .logs,
-      .alerts,
-      .all-logs {
-        max-height: 300px;
-        overflow-y: auto;
-        font-family: monospace;
-      }
-      a {
-        color: #4af;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>ThreatSnap Monitoring</h1>
-    <form method="POST" action="/start">
-      <label>Email for alerts:</label><br />
-      <input name="email" placeholder="you@example.com" required /><br />
+<head>
+  <meta charset="UTF-8">
+  <title>ThreatSnap Control Panel</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #111; color: white; }
+    h1 { color: #f33; }
+    form, .logs, .alerts, .all-logs { margin-top: 1rem; padding: 1rem; background: #222; border-radius: 8px; }
+    select, input, button, label { padding: 0.5rem; margin: 0.5rem 0; }
+    .logs, .alerts, .all-logs { max-height: 300px; overflow-y: auto; font-family: monospace; }
+    a { color: #4af; }
+  </style>
+</head>
+<body>
+  <h1>ThreatSnap Monitoring</h1>
+  <form method="POST" action="/start">
+    <label>
+      <input type="checkbox" id="enableEmail" name="enable_email" onchange="toggleEmailField(this.checked)" />
+      Enable Email Alerts
+    </label><br>
 
-      <label>Source:</label><br />
-      <select name="source" onchange="toggleVideoDropdown(this.value)">
-        <option value="webcam">Webcam</option>
-        <option value="video">Video File</option></select
-      ><br />
-
-      <div id="videoPicker" style="display: none">
-        <label>Select video file:</label><br />
-        <select name="filename">
-          {% for file in video_files %}
-          <option value="{{ file }}">{{ file }}</option>
-          {% endfor %}</select
-        ><br />
-      </div>
-
-      <button type="submit">Start Monitoring</button>
-    </form>
-
-    <form method="POST" action="/stop">
-      <button type="submit" {% if not running %}disabled{% endif %}>
-        Stop Monitoring
-      </button>
-    </form>
-
-    <form method="POST" action="/reset">
-      <button type="submit">Delete All Logs & Screenshots</button>
-    </form>
-
-    <div class="logs">
-      <h3>Live Terminal Logs</h3>
-      <pre id="logbox">Loading...</pre>
+    <div id="emailField" style="display: none">
+      <label>Email for alerts:</label><br>
+      <input name="email" placeholder="you@example.com"><br>
     </div>
 
-    <div class="alerts">
-      <h3>⚠️ Critical Alerts</h3>
-      <ul id="criticalList"></ul>
+    <label>Source:</label><br>
+    <select id="sourceSelector" name="source" onchange="toggleVideoDropdown(this.value)" {% if running %}disabled{% endif %}>
+      <option value="webcam" {% if not request.form.get('source') or request.form.get('source') == 'webcam' %}selected{% endif %}>Webcam</option>
+      <option value="video" {% if request.form.get('source') == 'video' %}selected{% endif %}>Video File</option>
+    </select><br>
+
+    <div id="videoPicker" style="display: none">
+      <label>Select video file:</label><br>
+      <select name="filename">
+        {% for file in video_files %}
+        <option value="{{ file }}">{{ file }}</option>
+        {% endfor %}
+      </select><br>
     </div>
 
-    <div class="all-logs">
-      <h3>📁 All Logs</h3>
-      <ul id="allLogsList"></ul>
-    </div>
+    <button type="submit" {% if running %}disabled{% endif %}>Start Monitoring</button>
+  </form>
 
-    <script>
-      function toggleVideoDropdown(value) {
-        document.getElementById('videoPicker').style.display =
-          value === 'video' ? 'block' : 'none'
-      }
+  <form method="POST" action="/stop">
+    <button type="submit" {% if not running %}disabled{% endif %}>Stop Monitoring</button>
+  </form>
 
-      function fetchLogs() {
-        fetch('/logs/live')
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById('logbox').textContent = data.join('\n')
-          })
-      }
+  <form method="POST" action="/reset">
+    <button type="submit">Delete All Logs & Screenshots</button>
+  </form>
 
-      function fetchCriticalAlerts() {
-        fetch('/logs/action-required')
-          .then((res) => res.json())
-          .then((data) => {
-            const list = document.getElementById('criticalList')
-            list.innerHTML = ''
-            if (data.length === 0) {
-              list.innerHTML = '<li>No critical alerts.</li>'
-            } else {
-              data.forEach((entry) => {
-                const li = document.createElement('li')
-                li.innerHTML = `<b>${entry.timestamp}</b><br>
+  <div class="logs">
+    <h3>Live Terminal Logs</h3>
+    <pre id="logbox">Loading...</pre>
+  </div>
+
+  <div class="alerts">
+    <h3>⚠️ Critical Alerts</h3>
+    <ul id="criticalList"></ul>
+  </div>
+
+  <div class="all-logs">
+    <h3>📁 All Logs</h3>
+    <ul id="allLogsList"></ul>
+  </div>
+
+  <script>
+    function toggleVideoDropdown(value) {
+      document.getElementById('videoPicker').style.display = (value === 'video') ? 'block' : 'none';
+    }
+
+    function toggleEmailField(enabled) {
+      document.getElementById('emailField').style.display = enabled ? 'block' : 'none';
+    }
+
+    function fetchLogs() {
+      fetch('/logs/live')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('logbox').textContent = data.join("\n");
+        });
+    }
+
+    function fetchCriticalAlerts() {
+      fetch('/logs/action-required')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('criticalList');
+          list.innerHTML = '';
+          if (data.length === 0) {
+            list.innerHTML = '<li>No critical alerts.</li>';
+          } else {
+            data.forEach(entry => {
+              const li = document.createElement('li');
+              li.innerHTML = `<b>${entry.timestamp}</b><br>
                 <a href="/images/${entry.image}" target="_blank">Image</a> |
                 <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
-                Danger: ${entry.analysis.danger}`
-                list.appendChild(li)
-              })
-            }
-          })
-      }
+                Danger: ${entry.analysis.danger}`;
+              list.appendChild(li);
+            });
+          }
+        });
+    }
 
-      function fetchAllLogs() {
-        fetch('/logs')
-          .then((res) => res.json())
-          .then((data) => {
-            const list = document.getElementById('allLogsList')
-            list.innerHTML = ''
-            if (data.length === 0) {
-              list.innerHTML = '<li>No logs available.</li>'
-            } else {
-              data.forEach((entry) => {
-                const li = document.createElement('li')
-                li.innerHTML = `<b>${entry.timestamp}</b><br>
+    function fetchAllLogs() {
+      fetch('/logs')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('allLogsList');
+          list.innerHTML = '';
+          if (data.length === 0) {
+            list.innerHTML = '<li>No logs available.</li>';
+          } else {
+            data.forEach(entry => {
+              const li = document.createElement('li');
+              li.innerHTML = `<b>${entry.timestamp}</b><br>
                 <a href="/images/${entry.image}" target="_blank">Image</a> |
                 <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
-                Danger: ${entry.analysis.danger}`
-                list.appendChild(li)
-              })
-            }
-          })
-      }
+                Danger: ${entry.analysis.danger}`;
+              list.appendChild(li);
+            });
+          }
+        });
+    }
 
-      setInterval(fetchLogs, 1000)
-      setInterval(fetchCriticalAlerts, 3000)
-      setInterval(fetchAllLogs, 5000)
-      fetchLogs()
-      fetchCriticalAlerts()
-      fetchAllLogs()
-    </script>
-  </body>
+    setInterval(fetchLogs, 1000);
+    setInterval(fetchCriticalAlerts, 3000);
+    setInterval(fetchAllLogs, 5000);
+    fetchLogs();
+    fetchCriticalAlerts();
+    fetchAllLogs();
+
+    toggleVideoDropdown(document.getElementById('sourceSelector').value);
+  </script>
+</body>
 </html>
