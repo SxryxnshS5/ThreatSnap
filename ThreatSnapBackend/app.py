@@ -1,5 +1,4 @@
-# app.py
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 import os
 import json
 from detector import HumanMovementDetector
@@ -7,12 +6,14 @@ from detector import HumanMovementDetector
 app = Flask(__name__)
 detector = HumanMovementDetector()
 
-SCREENSHOT_DIR = "static/screenshots"
+SAVE_DIR = "static/saves"
 
 @app.route("/start", methods=["POST"])
 def start_detection():
-    detector.start()
-    return jsonify({"status": "started"})
+    data = request.get_json()
+    email = data.get("email") if data else None
+    detector.start(email=email)
+    return jsonify({"status": "started", "email": email})
 
 @app.route("/stop", methods=["POST"])
 def stop_detection():
@@ -26,16 +27,16 @@ def status():
 @app.route("/logs", methods=["GET"])
 def list_logs():
     logs = []
-    for filename in os.listdir(SCREENSHOT_DIR):
+    for filename in os.listdir(SAVE_DIR):
         if filename.endswith(".json"):
-            with open(os.path.join(SCREENSHOT_DIR, filename), "r") as f:
+            with open(os.path.join(SAVE_DIR, filename), "r") as f:
                 data = json.load(f)
                 logs.append(data)
     return jsonify(sorted(logs, key=lambda x: x["timestamp"], reverse=True))
 
 @app.route("/images/<filename>")
 def get_image(filename):
-    return send_from_directory(SCREENSHOT_DIR, filename)
+    return send_from_directory(SAVE_DIR, filename)
 
 if __name__ == "__main__":
     app.run(debug=True)

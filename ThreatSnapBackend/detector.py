@@ -1,4 +1,3 @@
-# detector.py
 import cv2
 import time
 import threading
@@ -8,6 +7,7 @@ import json
 from datetime import datetime
 from ultralytics import YOLO
 from processor import process_screenshot
+from emailer import send_alert_email
 
 class HumanMovementDetector:
     def __init__(self, video_source=0):
@@ -18,6 +18,7 @@ class HumanMovementDetector:
         self.prev_boxes = []
         self.cooldown = 3
         self.last_trigger_time = 0
+        self.user_email = None
         self.output_dir = "static/saves"
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -76,6 +77,24 @@ class HumanMovementDetector:
                         }, log_file, indent=2)
 
                     print(f"[LOGGED] {image_filename}")
+
+                    # Send email if action required
+                    if self.user_email and analysis.get("action_required"):
+                        subject = "🔴 ThreatSnap Alert – Action Required"
+                        body = (
+                            f"Timestamp: {analysis['timestamp']}\n\n"
+                            f"Danger: {analysis.get('danger', 'N/A')}\n\n"
+                            f"Recommended Action: Investigate immediately.\n\n"
+                            "See attached image and log file for more information."
+                        )
+                        send_alert_email(
+                            recipient=self.user_email,
+                            subject=subject,
+                            body=body,
+                            attachments=[image_path, log_path]
+                        )
+                        time.sleep(5)
+
                     self.last_trigger_time = now
 
             self.prev_boxes = curr_boxes
@@ -83,9 +102,10 @@ class HumanMovementDetector:
 
         cap.release()
 
-    def start(self):
+    def start(self, email=None):
         if not self.running:
             self.running = True
+            self.user_email = email
             self.thread = threading.Thread(target=self._detect_loop)
             self.thread.start()
 
