@@ -1,4 +1,3 @@
-{# templates/index.html #}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,6 +9,7 @@
         padding: 2rem;
         background: #111;
         color: white;
+        position: relative;
       }
       h1 {
         color: #f33;
@@ -19,7 +19,7 @@
       .alerts,
       .all-logs,
       .status {
-        margin-top: 1rem;
+        margin-top: 1.5rem;
         padding: 1rem;
         background: #222;
         border-radius: 8px;
@@ -28,6 +28,7 @@
         display: flex;
         gap: 2rem;
         align-items: flex-start;
+        margin-top: 1.5rem;
       }
       .source-section {
         flex: 1;
@@ -41,7 +42,27 @@
       button,
       label {
         padding: 0.5rem;
-        margin: 0.5rem 0;
+        margin: 0.5rem 0 1rem;
+        font-size: 1rem;
+        border-radius: 6px;
+        border: 1px solid #444;
+        background: #1c1c1c;
+        color: white;
+      }
+      input::placeholder {
+        color: #888;
+      }
+      button {
+        background: #333;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      button:hover {
+        background: #444;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       .logs,
       .alerts,
@@ -67,66 +88,134 @@
         width: 100%;
         border-radius: 8px;
       }
+
+      .info-btn {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background: transparent;
+        color: #ccc;
+        border: 1px solid #444;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      .info-btn:hover {
+        background: #333;
+      }
+      .info-modal {
+        display: none;
+        position: fixed;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #222;
+        border: 1px solid #444;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 600px;
+        padding: 1.5rem;
+        z-index: 1000;
+        color: #eee;
+      }
+      .info-modal h2 {
+        margin-top: 0;
+        color: #f33;
+      }
+      .info-close {
+        float: right;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: #aaa;
+      }
+      .info-close:hover {
+        color: #fff;
+      }
     </style>
   </head>
   <body>
     <h1>ThreatSnap Monitoring</h1>
+    <button class="info-btn" onclick="toggleInfo()">ℹ️ Info</button>
+
+    <div class="info-modal" id="infoModal">
+      <span class="info-close" onclick="toggleInfo()">✖</span>
+      <h2>About ThreatSnap</h2>
+      <p>
+        This is a <strong>demo website</strong> for ThreatSnap — a smart
+        movement and threat detection tool built to run
+        <strong>offline</strong> on edge devices.
+      </p>
+      <p><strong>How to use:</strong></p>
+      <ol>
+        <li>Select a source: Webcam or Video File</li>
+        <li>Enable email alerts (optional)</li>
+        <li>Click <em>Start Monitoring</em> to begin</li>
+        <li>Tool detects human movement and takes screenshots</li>
+        <li>It analyzes each screenshot for danger and logs it</li>
+        <li>If needed, it emails you an alert with the log & image</li>
+      </ol>
+      <p>You can stop the monitoring or reset all logs/screenshots.</p>
+    </div>
 
     <div class="status" id="monitoringStatus">
       <p>Loading monitoring status...</p>
     </div>
 
-    <form method="POST" action="/start">
-      <label>
-        <input
-          type="checkbox"
-          id="enableEmail"
-          name="enable_email"
-          onchange="toggleEmailField(this.checked)"
-        />
-        Enable Email Alerts </label
-      ><br />
+    <div id="startFormSection">
+      <form method="POST" action="/start">
+        <label>
+          <input
+            type="checkbox"
+            id="enableEmail"
+            name="enable_email"
+            onchange="toggleEmailField(this.checked)"
+          />
+          Enable Email Alerts </label
+        ><br />
 
-      <div id="emailField" style="display: none">
-        <label>Email for alerts:</label><br />
-        <input name="email" placeholder="you@example.com" /><br />
-      </div>
+        <div id="emailField" style="display: none; margin-top: 1rem">
+          <label>Email for alerts:</label><br />
+          <input name="email" placeholder="you@example.com" /><br />
+        </div>
 
-      <div class="source-preview-container">
-        <div class="source-section">
-          <label>Source:</label><br />
-          <select
-            id="sourceSelector"
-            name="source"
-            onchange="toggleVideoDropdown(this.value)"
-          >
-            <option value="webcam">Webcam</option>
-            <option value="video">Video File</option></select
-          ><br />
-
-          <div id="videoPicker" style="display: none">
-            <label>Select video file:</label><br />
+        <div class="source-preview-container">
+          <div class="source-section">
+            <label>Source:</label><br />
             <select
-              id="videoFileSelect"
-              name="filename"
-              onchange="previewVideo(this.value)"
+              id="sourceSelector"
+              name="source"
+              onchange="toggleVideoDropdown(this.value)"
             >
-              <option value="">-- Select a video --</option>
-              {% for file in video_files %}
-              <option value="{{ file }}">{{ file }}</option>
-              {% endfor %}</select
+              <option value="webcam">Webcam</option>
+              <option value="video">Video File</option></select
             ><br />
+
+            <div id="videoPicker" style="display: none">
+              <label style="margin-bottom: 0.5rem">Select video file:</label
+              ><br />
+              <select
+                id="videoFileSelect"
+                name="filename"
+                onchange="previewVideo(this.value)"
+              >
+                <option value="">-- Select a video --</option>
+                {% for file in video_files %}
+                <option value="{{ file }}">{{ file }}</option>
+                {% endfor %}</select
+              ><br />
+            </div>
+          </div>
+
+          <div class="viewer" id="videoViewer" style="display: none">
+            <h4>🎞️ Preview</h4>
+            <video id="videoPlayer" controls></video>
           </div>
         </div>
 
-        <div class="viewer" id="videoViewer" style="display: none">
-          <h4>🎞️ Preview</h4>
-          <video id="videoPlayer" controls></video>
-        </div>
-      </div>
-
-      <button type="submit" id="startBtn">Start Monitoring</button>
-    </form>
+        <button type="submit" id="startBtn">Start Monitoring</button>
+      </form>
+    </div>
 
     <form method="POST" action="/stop">
       <button type="submit" id="stopBtn">Stop Monitoring</button>
@@ -152,6 +241,11 @@
     </div>
 
     <script>
+      function toggleInfo() {
+        const modal = document.getElementById('infoModal')
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block'
+      }
+
       function toggleVideoDropdown(value) {
         const videoPicker = document.getElementById('videoPicker')
         const viewer = document.getElementById('videoViewer')
@@ -238,21 +332,19 @@
         fetch('/status')
           .then((res) => res.json())
           .then((data) => {
+            const running = data.running
             const statusBox = document.getElementById('monitoringStatus')
             const startBtn = document.getElementById('startBtn')
             const stopBtn = document.getElementById('stopBtn')
+            const startFormSection = document.getElementById('startFormSection')
 
-            if (data.running) {
-              statusBox.innerHTML =
-                '<p class="status-running">🟢 Monitoring is currently running.</p>'
-              startBtn.disabled = true
-              stopBtn.disabled = false
-            } else {
-              statusBox.innerHTML =
-                '<p class="status-stopped">🔴 Monitoring is not running.</p>'
-              startBtn.disabled = false
-              stopBtn.disabled = true
-            }
+            statusBox.innerHTML = running
+              ? '<p class="status-running">🟢 Monitoring is currently running.</p>'
+              : '<p class="status-stopped">🔴 Monitoring is not running.</p>'
+
+            startBtn.disabled = running
+            stopBtn.disabled = !running
+            startFormSection.style.display = running ? 'none' : 'block'
           })
       }
 
