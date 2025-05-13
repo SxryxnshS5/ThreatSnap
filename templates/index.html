@@ -376,15 +376,20 @@
       async function confirmReset(yes) {
         document.getElementById('confirmModal').style.display = 'none'
         if (!yes) return
-        clearInterval(logInterval)
+
         clearInterval(alertInterval)
         clearInterval(allLogInterval)
+
         const res = await fetch('/reset', { method: 'POST' })
         await res.json()
+
         showPopup('Logs and screenshots deleted.', '#ffa500')
-        document.getElementById('logbox').textContent = ''
         document.getElementById('criticalList').innerHTML = ''
         document.getElementById('allLogsList').innerHTML = ''
+
+        // ✅ Restart intervals to pick up new data after reset
+        alertInterval = setInterval(fetchCriticalAlerts, 500)
+        allLogInterval = setInterval(fetchAllLogs, 500)
       }
 
       async function fetchStatus() {
@@ -472,10 +477,10 @@
       }
 
       // Start fetch intervals
-      logInterval = setInterval(fetchLogs, 1000)
-      alertInterval = setInterval(fetchCriticalAlerts, 3000)
-      allLogInterval = setInterval(fetchAllLogs, 5000)
-      setInterval(fetchStatus, 1000)
+      logInterval = setInterval(fetchLogs, 500)
+      alertInterval = setInterval(fetchCriticalAlerts, 500)
+      allLogInterval = setInterval(fetchAllLogs, 500)
+      setInterval(fetchStatus, 500)
       fetchLogs()
       fetchCriticalAlerts()
       fetchAllLogs()
