@@ -1,5 +1,4 @@
-# app.py
-from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
 import json
 from detector import HumanMovementDetector, runtime_logs
@@ -12,7 +11,6 @@ FRAME_PATH = "static/current_frame.jpg"
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
-# No default instance yet
 detector = None
 
 @app.route("/")
@@ -24,30 +22,37 @@ def home():
 @app.route("/start", methods=["POST"])
 def start_detection():
     global detector
-
-    data = request.form
-    email_alert_enabled = data.get("enable_email") == "on"
-    email = data.get("email") if email_alert_enabled else None
+    data = request.get_json()
+    email = data.get("email")
     filename = data.get("filename")
 
     video_path = os.path.join(VIDEO_DIR, filename)
     if not os.path.isfile(video_path):
         runtime_logs.append(f"[ERROR] File not found: {video_path}")
-        return redirect(url_for("home"))
+        return jsonify({"status": "error", "message": "Video file not found."}), 400
 
     if detector and detector.running:
         detector.stop()
+
     detector = HumanMovementDetector(video_source=video_path)
     detector.start(email=email)
-
-    return redirect(url_for("home"))
+    return jsonify({"status": "started", "email": email})
 
 @app.route("/stop", methods=["POST"])
 def stop_detection():
     global detector
     if detector:
         detector.stop()
-    return redirect(url_for("home"))
+    return jsonify({"status": "stopped"})
+
+@app.route("/reset", methods=["POST"])
+def reset_logs():
+    for f in os.listdir(SAVE_DIR):
+        os.remove(os.path.join(SAVE_DIR, f))
+    if os.path.exists(FRAME_PATH):
+        os.remove(FRAME_PATH)
+    runtime_logs.append("[RESET] Logs and screenshots cleared.")
+    return jsonify({"status": "reset"})
 
 @app.route("/status", methods=["GET"])
 def status():
@@ -83,15 +88,6 @@ def live_logs():
 def get_image(filename):
     return send_from_directory(SAVE_DIR, filename)
 
-@app.route("/reset", methods=["POST"])
-def reset_logs():
-    for f in os.listdir(SAVE_DIR):
-        os.remove(os.path.join(SAVE_DIR, f))
-    if os.path.exists(FRAME_PATH):
-        os.remove(FRAME_PATH)
-    runtime_logs.append("[RESET] Logs and screenshots cleared.")
-    return redirect(url_for("home"))
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)

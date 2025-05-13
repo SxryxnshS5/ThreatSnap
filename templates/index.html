@@ -18,11 +18,20 @@
         background: #330000;
         color: #ff4d4d;
         padding: 0.8rem 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem; /* Increased spacing */
         border-left: 6px solid #ff0000;
         font-weight: bold;
       }
-      form,
+      .form-section {
+        background: #1e1e1e;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+      }
+      .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+      }
       .logs,
       .alerts,
       .all-logs,
@@ -32,23 +41,12 @@
         background: #222;
         border-radius: 8px;
       }
-      .form-group {
-        margin-bottom: 1.5rem;
-        text-align: left;
-      }
-
-      .source-preview-container {
-        display: flex;
-        gap: 2rem;
-        align-items: flex-start;
-        margin-top: 1.5rem;
-      }
-      .source-section {
-        flex: 1;
-      }
-      .viewer {
-        max-width: 800px;
-        margin-top: 0.5rem;
+      .logs,
+      .alerts,
+      .all-logs {
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
       }
       select,
       input,
@@ -60,9 +58,6 @@
         border: 1px solid #444;
         background: #1c1c1c;
         color: white;
-      }
-      input::placeholder {
-        color: #888;
       }
       button {
         background: #333;
@@ -77,13 +72,6 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
-      .logs,
-      .alerts,
-      .all-logs {
-        max-height: 300px;
-        overflow-y: auto;
-        font-family: monospace;
-      }
       a {
         color: #4af;
       }
@@ -96,6 +84,10 @@
       }
       .status-stopped {
         color: red;
+      }
+      .viewer {
+        max-width: 800px;
+        margin-top: 0.5rem;
       }
       video {
         width: 100%;
@@ -115,14 +107,11 @@
         cursor: pointer;
         box-shadow: 0 0 10px rgba(255, 77, 77, 0.6);
         animation: pulse 2s infinite;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
-
       .info-btn:hover {
         transform: scale(1.05);
         box-shadow: 0 0 20px rgba(255, 100, 50, 0.8);
       }
-
       @keyframes pulse {
         0% {
           box-shadow: 0 0 8px rgba(255, 77, 77, 0.6);
@@ -134,7 +123,6 @@
           box-shadow: 0 0 8px rgba(255, 77, 77, 0.6);
         }
       }
-
       .info-modal {
         display: none;
         position: fixed;
@@ -163,21 +151,61 @@
       .info-close:hover {
         color: #fff;
       }
-      form input[type='email'],
-      form select,
-      form button,
-      form label {
-        max-width: 400px;
-        width: 100%;
-        display: block;
+      .popup {
+        position: fixed;
+        top: 2rem;
+        left: 50%;
+        transform: translate(-50%, 0);
+        background: #222;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        border-left: 6px solid #4af;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        font-size: 0.95rem;
+        display: none;
+        z-index: 1000;
+        animation: fadeInOut 4s ease-in-out;
+      }
+      .modal-confirm {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #1c1c1c;
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        border: 1px solid #444;
+        display: none;
+        z-index: 2000;
+      }
+      .modal-confirm button {
+        margin: 1rem 0.5rem 0 0;
+      }
+      @keyframes fadeInOut {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
       }
     </style>
   </head>
   <body>
     <h1>ThreatSnap Monitoring</h1>
     <div class="warning-banner">
-      ⚠️ First time using ThreatSnap? Click the Info button in the top right to
-      understand how it works.
+      ⚠️ First time using ThreatSnap? Click the Info button to learn more.
     </div>
     <button class="info-btn" onclick="toggleInfo()">ℹ️ Info</button>
 
@@ -222,77 +250,87 @@
       <p>Loading monitoring status...</p>
     </div>
 
-    <div id="startFormSection">
-      <form method="POST" action="/start">
-        <div class="form-group">
-          <label>
-            <input
-              type="checkbox"
-              id="enableEmail"
-              name="enable_email"
-              onchange="toggleEmailField(this.checked)"
-            />
-            Enable Email Alerts
-          </label>
-        </div>
-
-        <div class="form-group" id="emailField" style="display: none">
-          <label for="email">Email for alerts:</label>
+    <!-- Form Section with grey background -->
+    <div class="form-section" id="startFormSection">
+      <div class="form-group">
+        <label>
           <input
-            type="email"
-            name="email"
-            id="email"
-            placeholder="you@example.com"
+            type="checkbox"
+            id="enableEmail"
+            onchange="toggleEmailField(this.checked)"
           />
-        </div>
-
-        <div class="form-group">
-          <label for="filename">Select video file:</label>
-          <select
-            name="filename"
-            id="filename"
-            onchange="previewVideo(this.value)"
-          >
-            <option value="">-- Select a video --</option>
-            {% for file in video_files %}
-            <option value="{{ file }}">{{ file }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="viewer" id="videoViewer" style="display: none">
-          <h4>🎥 Preview</h4>
-          <video id="videoPlayer" controls></video>
-        </div>
-
-        <button type="submit" id="startBtn">Start Monitoring</button>
-      </form>
+          Enable Email Alerts
+        </label>
+      </div>
+      <div class="form-group" id="emailField" style="display: none">
+        <label for="email">Email for alerts:</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="filename">Select video file:</label>
+        <select id="filename" onchange="handleVideoPreview()">
+          <option value="">-- Select a video --</option>
+          {% for file in video_files %}
+          <option value="{{ file }}">{{ file }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Enable video preview:</label>
+        <label>
+          <input
+            type="radio"
+            name="previewToggle"
+            value="yes"
+            checked
+            onchange="handleVideoPreview()"
+          />
+          Yes
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="previewToggle"
+            value="no"
+            onchange="handleVideoPreview()"
+          />
+          No
+        </label>
+      </div>
+      <div class="viewer" id="videoViewer" style="display: none">
+        <h4>🎥 Preview</h4>
+        <video id="videoPlayer" controls></video>
+      </div>
+      <div class="form-group">
+        <button id="startBtn">Start Monitoring</button>
+        <button id="stopBtn">Stop Monitoring</button>
+        <button id="resetBtn">Delete All Logs & Screenshots</button>
+      </div>
     </div>
-
-    <form method="POST" action="/stop">
-      <button type="submit" id="stopBtn">Stop Monitoring</button>
-    </form>
-
-    <form method="POST" action="/reset">
-      <button type="submit">Delete All Logs & Screenshots</button>
-    </form>
 
     <div class="logs">
       <h3>Live Terminal Logs</h3>
       <pre id="logbox">Loading...</pre>
     </div>
-
     <div class="alerts">
       <h3>⚠️ Critical Alerts</h3>
       <ul id="criticalList"></ul>
     </div>
-
     <div class="all-logs">
       <h3>📁 All Logs</h3>
       <ul id="allLogsList"></ul>
     </div>
 
+    <div id="popup" class="popup"></div>
+    <div class="modal-confirm" id="confirmModal">
+      <p>Are you sure you want to delete all logs and screenshots?</p>
+      <button onclick="confirmReset(true)">Yes</button>
+      <button onclick="confirmReset(false)">Cancel</button>
+    </div>
+
     <script>
+      let logInterval, alertInterval, allLogInterval
+
       function toggleInfo() {
         const modal = document.getElementById('infoModal')
         modal.style.display = modal.style.display === 'block' ? 'none' : 'block'
@@ -304,10 +342,14 @@
           : 'none'
       }
 
-      function previewVideo(filename) {
+      function handleVideoPreview() {
+        const filename = document.getElementById('filename').value
+        const previewEnabled =
+          document.querySelector('input[name="previewToggle"]:checked')
+            .value === 'yes'
         const viewer = document.getElementById('videoViewer')
         const player = document.getElementById('videoPlayer')
-        if (filename) {
+        if (filename && previewEnabled) {
           player.src = `/static/videos/${filename}`
           viewer.style.display = 'block'
         } else {
@@ -316,81 +358,124 @@
         }
       }
 
-      function fetchLogs() {
-        fetch('/logs/live')
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById('logbox').textContent = data.join('\n')
-          })
+      function showPopup(message, color = '#4af') {
+        const popup = document.getElementById('popup')
+        popup.textContent = message
+        popup.style.borderLeftColor = color
+        popup.style.display = 'block'
+        popup.style.animation = 'none'
+        void popup.offsetWidth
+        popup.style.animation = 'fadeInOut 4s ease-in-out'
+        setTimeout(() => (popup.style.display = 'none'), 4000)
       }
 
-      function fetchCriticalAlerts() {
-        fetch('/logs/action-required')
-          .then((res) => res.json())
-          .then((data) => {
-            const list = document.getElementById('criticalList')
-            list.innerHTML = ''
-            if (data.length === 0) {
-              list.innerHTML = '<li>No critical alerts.</li>'
-            } else {
-              data.forEach((entry) => {
-                const li = document.createElement('li')
-                li.innerHTML = `<b>${entry.timestamp}</b><br>
-                <a href="/images/${entry.image}" target="_blank">Image</a> |
-                <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
-                Danger: ${entry.analysis.danger}`
-                list.appendChild(li)
-              })
-            }
-          })
+      function showResetModal() {
+        document.getElementById('confirmModal').style.display = 'block'
       }
 
-      function fetchAllLogs() {
-        fetch('/logs')
-          .then((res) => res.json())
-          .then((data) => {
-            const list = document.getElementById('allLogsList')
-            list.innerHTML = ''
-            if (data.length === 0) {
-              list.innerHTML = '<li>No logs available.</li>'
-            } else {
-              data.forEach((entry) => {
-                const li = document.createElement('li')
-                li.innerHTML = `<b>${entry.timestamp}</b><br>
-                <a href="/images/${entry.image}" target="_blank">Image</a> |
-                <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
-                Danger: ${entry.analysis.danger}`
-                list.appendChild(li)
-              })
-            }
-          })
+      async function confirmReset(yes) {
+        document.getElementById('confirmModal').style.display = 'none'
+        if (!yes) return
+        clearInterval(logInterval)
+        clearInterval(alertInterval)
+        clearInterval(allLogInterval)
+        const res = await fetch('/reset', { method: 'POST' })
+        await res.json()
+        showPopup('Logs and screenshots deleted.', '#ffa500')
+        document.getElementById('logbox').textContent = ''
+        document.getElementById('criticalList').innerHTML = ''
+        document.getElementById('allLogsList').innerHTML = ''
       }
 
-      function fetchStatus() {
-        fetch('/status')
-          .then((res) => res.json())
-          .then((data) => {
-            const running = data.running
-            const statusBox = document.getElementById('monitoringStatus')
-            const startBtn = document.getElementById('startBtn')
-            const stopBtn = document.getElementById('stopBtn')
-            const startFormSection = document.getElementById('startFormSection')
-
-            statusBox.innerHTML = running
-              ? '<p class="status-running">🟢 Monitoring is currently running.</p>'
-              : '<p class="status-stopped">🔴 Monitoring is not running.</p>'
-
-            startBtn.disabled = running
-            stopBtn.disabled = !running
-            startFormSection.style.display = running ? 'none' : 'block'
-          })
+      async function fetchStatus() {
+        const res = await fetch('/status')
+        const data = await res.json()
+        const running = data.running
+        document.getElementById('monitoringStatus').innerHTML = running
+          ? '<p class="status-running">🟢 Monitoring is currently running.</p>'
+          : '<p class="status-stopped">🔴 Monitoring is not running.</p>'
+        document.getElementById('startBtn').disabled = running
+        document.getElementById('filename').disabled = running
+        document.getElementById('email').disabled = running
+        document.getElementById('enableEmail').disabled = running
+        document.getElementById('stopBtn').disabled = !running
       }
 
-      setInterval(fetchLogs, 1000)
-      setInterval(fetchCriticalAlerts, 3000)
-      setInterval(fetchAllLogs, 5000)
+      document.getElementById('startBtn').onclick = async () => {
+        const enableEmail = document.getElementById('enableEmail').checked
+        const email = enableEmail
+          ? document.getElementById('email').value
+          : null
+        const filename = document.getElementById('filename').value
+        if (!filename) return showPopup('Please select a video file.', '#f33')
+        const res = await fetch('/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, filename }),
+        })
+        const data = await res.json()
+        showPopup(`Monitoring started${email ? ' for ' + email : ''}`)
+        fetchStatus()
+      }
+
+      document.getElementById('stopBtn').onclick = async () => {
+        const res = await fetch('/stop', { method: 'POST' })
+        await res.json()
+        showPopup('Monitoring stopped.', '#f33')
+        fetchStatus()
+      }
+
+      document.getElementById('resetBtn').onclick = showResetModal
+
+      async function fetchLogs() {
+        const res = await fetch('/logs/live')
+        const data = await res.json()
+        document.getElementById('logbox').textContent = data.join('\n')
+      }
+
+      async function fetchCriticalAlerts() {
+        const res = await fetch('/logs/action-required')
+        const data = await res.json()
+        const list = document.getElementById('criticalList')
+        list.innerHTML = ''
+        if (data.length === 0) {
+          list.innerHTML = '<li>No critical alerts.</li>'
+        } else {
+          data.forEach((entry) => {
+            const li = document.createElement('li')
+            li.innerHTML = `<b>${entry.timestamp}</b><br>
+              <a href="/images/${entry.image}" target="_blank">Image</a> |
+              <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
+              Danger: ${entry.analysis.danger}`
+            list.appendChild(li)
+          })
+        }
+      }
+
+      async function fetchAllLogs() {
+        const res = await fetch('/logs')
+        const data = await res.json()
+        const list = document.getElementById('allLogsList')
+        list.innerHTML = ''
+        if (data.length === 0) {
+          list.innerHTML = '<li>No logs available.</li>'
+        } else {
+          data.forEach((entry) => {
+            const li = document.createElement('li')
+            li.innerHTML = `<b>${entry.timestamp}</b><br>
+              <a href="/images/${entry.image}" target="_blank">Image</a> |
+              <a href="/images/${entry.timestamp}.json" target="_blank">Log</a><br>
+              Danger: ${entry.analysis.danger}`
+            list.appendChild(li)
+          })
+        }
+      }
+
+      // Start fetch intervals
+      logInterval = setInterval(fetchLogs, 1000)
+      alertInterval = setInterval(fetchCriticalAlerts, 3000)
+      allLogInterval = setInterval(fetchAllLogs, 5000)
       setInterval(fetchStatus, 1000)
-
       fetchLogs()
       fetchCriticalAlerts()
       fetchAllLogs()
