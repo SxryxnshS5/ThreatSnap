@@ -1,9 +1,0 @@
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-
-# Env files
-.env
-
-static/
