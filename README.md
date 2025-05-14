@@ -31,13 +31,15 @@ The backend system:
 
 ## 📽 Intended Use
 
-ThreatSnap is designed to run **offline on local systems**, including:
+ThreatSnap is designed to run locally on systems such as:
 
 - Schools
 - Retail environments
 - Residential security systems
 
-The web interface exists **only for demonstration**. In the future, ThreatSnap will be:
+While it performs detection and processing on-device, it currently requires an internet connection for image analysis using OpenAI’s GPT-4o API. The web interface is intended for demonstration purposes only.
+
+In the future, ThreatSnap will be:
 
 - 🔐 Integrated directly into **CCTV hardware** or video surveillance pipelines
 - 💻 Available as a **desktop monitoring tool**
