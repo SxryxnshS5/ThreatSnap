@@ -18,7 +18,7 @@ def process_screenshot(image_path):
     """
     Analyzes the given image using GPT-4o to detect humans,
     potential weapons, danger level, and whether action is required.
-    Always returns a consistent structure.
+    Always returns a consistent structure with multiple threat levels.
     """
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     print(f"[PROCESSING] {image_path}")
@@ -27,7 +27,7 @@ def process_screenshot(image_path):
         # Prepare the image as base64
         image_base64 = _to_base64(image_path)
 
-        # Run analysis
+        # Run analysis with enhanced system prompt for multiple threat levels
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -36,12 +36,13 @@ def process_screenshot(image_path):
                     "content": (
                         "You are a security assistant analyzing images. "
                         "Do not identify or make assumptions about specific individuals. "
-                        "Instead, describe visible people’s posture (e.g., sitting, running), visible object types "
+                        "Instead, describe visible people's posture (e.g., sitting, running), visible object types "
                         "(e.g., bags, tools, weapons), and potential threats. Return the following fields:\n"
                         "- profiles: list of descriptions of each human\n"
                         "- weapons: list of any objects resembling weapons\n"
-                        "- danger: brief summary of threat level\n"
+                        "- danger: categorize as 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'\n"
                         "- action_required: true/false flag\n"
+                        "- recommended_response: specific action recommendation based on threat level\n"
                         "Respond strictly in JSON format only. Avoid vague statements or refusals."
                     )
                 },
@@ -71,8 +72,9 @@ def process_screenshot(image_path):
             "image_path": image_path,
             "profiles": structured.get("profiles", []),
             "weapons": structured.get("weapons", []),
-            "danger": structured.get("danger", "Not provided."),
+            "danger": structured.get("danger", "LOW"),
             "action_required": structured.get("action_required", False),
+            "recommended_response": structured.get("recommended_response", "No specific action needed."),
             "raw_model_response": raw_text
         }
 
@@ -87,6 +89,7 @@ def process_screenshot(image_path):
             "weapons": [],
             "danger": "Unable to analyze due to error.",
             "action_required": False,
+            "recommended_response": "System error - review manually.",
             "raw_model_response": None
         }
 
