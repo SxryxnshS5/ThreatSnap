@@ -402,7 +402,7 @@
         background: var(--card);
         border-radius: var(--radius);
         padding: 0;
-        max-width: 600px;
+        max-width: 800px;
         width: 100%;
         max-height: 90vh;
         overflow-y: auto;
@@ -836,7 +836,7 @@
             <strong>dangerous situations</strong> by analyzing
             <strong>human movement</strong> in CCTV footage. It's designed to
             run <strong>offline</strong> on local devices and works even without
-            internet (if we use a local hosted AI model for analyzing).
+            internet (if we use a locally hosted AI model for analyzing).
           </p>
           <p>
             This demo version works with sample video files and shows how the
@@ -853,8 +853,8 @@
             <li><strong>Person tracking</strong> across video frames</li>
             <li><strong>Advanced analytics</strong> for security insights</li>
             <li>
-              <strong>False positive reduction</strong> through confirmation
-              sequences
+              <strong>External alarm system</strong> connectivity for immediate
+              physical response
             </li>
           </ul>
           <p><strong>How to use:</strong></p>
@@ -866,6 +866,39 @@
             <li>Screenshots are analyzed for risky or dangerous behavior</li>
             <li>If a threat is found, an email alert is sent (if enabled)</li>
           </ol>
+          <p><strong>Technical details:</strong></p>
+          <ul style="padding-left: 1.5rem; margin-bottom: 1rem">
+            <li>Built with Python backend and HTML/CSS/JavaScript frontend</li>
+            <li>Uses computer vision to detect motion changes in video</li>
+            <li>AI analysis of detected scenes for threat assessment</li>
+            <li>
+              Supports local video files with plans for real-time CCTV
+              integration
+            </li>
+          </ul>
+          <p><strong>Future improvements:</strong></p>
+          <ul style="padding-left: 1.5rem">
+            <li>
+              Optimizing the detector for more efficient and accurate
+              screenshots
+            </li>
+            <li>
+              Reducing false positives through advanced machine learning models
+            </li>
+            <li>
+              Real-time analysis to minimize lag between detection and
+              notification
+            </li>
+            <li>Mobile application for remote monitoring and alerts</li>
+            <li>Integration with existing security infrastructure</li>
+          </ul>
+          <p>
+            <em
+              >This project was developed as a hackathon submission to
+              demonstrate the potential of AI-powered security monitoring
+              systems that prioritize privacy and local processing.</em
+            >
+          </p>
         </div>
       </div>
     </div>
