@@ -381,7 +381,6 @@
         </a>
       </div>
 
-      <!-- Summary Stats -->
       <div class="card">
         <div class="card-header">
           <h2>Security Overview</h2>
@@ -410,7 +409,6 @@
         </div>
       </div>
 
-      <!-- Threat Level Chart -->
       <div class="card">
         <div class="card-header">
           <h3>Threat Level Distribution</h3>
@@ -426,7 +424,6 @@
         </div>
       </div>
 
-      <!-- Hourly Distribution -->
       <div class="card">
         <div class="card-header">
           <h3>Alert Frequency by Hour</h3>
@@ -442,7 +439,6 @@
         </div>
       </div>
 
-      <!-- Detected Threats and Objects -->
       <div class="card">
         <div class="card-header">
           <h3>Detected Objects</h3>
@@ -485,7 +481,6 @@
         </div>
       </div>
 
-      <!-- Detailed Incident Timeline -->
       <div class="card">
         <div class="card-header">
           <h3>Detailed Incident Timeline</h3>
@@ -512,7 +507,6 @@
                   </div>
                 </div>
 
-                <!-- Show profiles (people detected) -->
                 {% if incident.analysis.profiles %}
                 <div>
                   <strong>People detected:</strong>
@@ -522,10 +516,7 @@
                     {% endfor %}
                   </ul>
                 </div>
-                {% endif %}
-
-                <!-- Show weapons if any -->
-                {% if incident.analysis.weapons and
+                {% endif %} {% if incident.analysis.weapons and
                 incident.analysis.weapons|length > 0 %}
                 <div style="margin-top: 0.5rem">
                   <strong>Weapons detected:</strong>
@@ -538,7 +529,6 @@
                 {% endif %}
 
                 <div class="incident-meta">
-                  <!-- Show number of people -->
                   <div class="incident-meta-item">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -561,7 +551,6 @@
                     {{ incident.analysis.profiles|length }} people
                   </div>
 
-                  <!-- Show timestamp from analysis if available -->
                   {% if incident.analysis.timestamp %}
                   <div class="incident-meta-item">
                     <svg
@@ -659,7 +648,6 @@
         </div>
       </div>
 
-      <!-- Action Summary -->
       <div class="card">
         <div class="card-header">
           <h3>Security Response Summary</h3>
@@ -682,9 +670,7 @@
     </div>
 
     <script>
-      // Format timestamps better
       function formatTimestamp(timestamp) {
-        // Check if it's a date format like "YYYYMMDD_HH"
         if (timestamp.includes('_')) {
           const [datePart, timePart] = timestamp.split('_');
           const year = datePart.substring(0, 4);
@@ -696,27 +682,21 @@
         return timestamp;
       }
 
-      // Tab switching functionality
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
-          // Remove active class from all tabs
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          // Add active class to clicked tab
           tab.classList.add('active');
 
-          // Hide all tab content
           document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
           });
 
-          // Show selected tab content
           const tabId = tab.getAttribute('data-tab') + '-tab';
           document.getElementById(tabId).classList.add('active');
         });
       });
 
       {% if total_alerts > 0 %}
-      // Threat Level Chart
       const threatLevelData = {
           labels: ['Low', 'Medium', 'High', 'Critical'],
           datasets: [{
@@ -728,10 +708,10 @@
                   {{ danger_levels.CRITICAL or 0 }}
               ],
               backgroundColor: [
-                  'rgba(34, 197, 94, 0.6)',  // Low - green
-                  'rgba(234, 179, 8, 0.6)',   // Medium - yellow
-                  'rgba(239, 68, 68, 0.6)',   // High - red
-                  'rgba(124, 0, 0, 0.6)'      // Critical - dark red
+                  'rgba(34, 197, 94, 0.6)',
+                  'rgba(234, 179, 8, 0.6)',
+                  'rgba(239, 68, 68, 0.6)',
+                  'rgba(124, 0, 0, 0.6)'
               ],
               borderColor: [
                   'rgba(34, 197, 94, 1)',
@@ -776,7 +756,6 @@
       {% endif %}
 
       {% if hourly_breakdown %}
-      // Hourly breakdown chart
       const hourlyLabels = [];
       const hourlyData = [];
 
@@ -829,12 +808,10 @@
       );
       {% endif %}
 
-      // Add auto-refresh for the analytics page
       setTimeout(() => {
           window.location.reload();
-      }, 60000); // Refresh every minute
+      }, 60000);
 
-      // Format displayed timestamps
       document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.incident-header span:not(.danger-badge):not(.action-required-badge)').forEach(el => {
           if (el.textContent.includes('_')) {

@@ -44,24 +44,21 @@ def trigger_alarm_system(threat_level, location, image_path=None):
 
 class PersonTracker:
     def __init__(self):
-        self.tracks = {}  # id -> person data
+        self.tracks = {}
         self.next_id = 0
-        self.max_distance = 50  # Max distance for same-person match
+        self.max_distance = 50
         
     def update(self, boxes, frame):
         current_ids = []
         
-        # Match existing tracks
         for box in boxes:
             matched = False
             for track_id, track in list(self.tracks.items()):
                 distance = self.euclidean_distance(box, track["last_position"])
                 if distance < self.max_distance:
-                    # Same person, update the track
                     self.tracks[track_id]["last_position"] = box
                     self.tracks[track_id]["frames_visible"] += 1
                     
-                    # Record path
                     self.tracks[track_id]["path"].append(box)
                     
                     current_ids.append(track_id)
@@ -69,7 +66,6 @@ class PersonTracker:
                     break
             
             if not matched:
-                # New person
                 self.tracks[self.next_id] = {
                     "first_seen": time.time(),
                     "last_position": box,
@@ -79,13 +75,11 @@ class PersonTracker:
                 current_ids.append(self.next_id)
                 self.next_id += 1
                 
-        # Handle disappeared tracks
         for track_id in list(self.tracks.keys()):
             if track_id not in current_ids:
                 self.tracks[track_id]["frames_missing"] = self.tracks[track_id].get("frames_missing", 0) + 1
                 
-                # Remove tracks that have been missing too long
-                if self.tracks[track_id]["frames_missing"] > 30:  # ~1 second at 30fps
+                if self.tracks[track_id]["frames_missing"] > 30:
                     del self.tracks[track_id]
                     
         return self.tracks
@@ -104,7 +98,7 @@ class HumanMovementDetector:
         self.running = False
         self.thread = None
         self.prev_boxes = []
-        self.cooldown = 5  # seconds
+        self.cooldown = 5
         self.last_trigger_video_time = -float('inf')
         self.user_email = None
         self.output_dir = "static/saves"
@@ -112,10 +106,10 @@ class HumanMovementDetector:
         self.person_tracker = PersonTracker()
         self.monitoring_zones = []
         self.recent_activity = False
-        self.potential_threats = []  # Store frames for confirmation
-        self.confirmation_threshold = 2  # Number of consecutive detections needed
+        self.potential_threats = [] 
+        self.confirmation_threshold = 2
         self.privacy_blur = False
-        self.current_frame = None  # Store current frame for UI display
+        self.current_frame = None
 
     def euclidean_distance(self, a, b):
         return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -124,7 +118,7 @@ class HumanMovementDetector:
         boxes = []
         for r in results:
             for box in r.boxes:
-                if int(box.cls[0]) == 0:  # Person class
+                if int(box.cls[0]) == 0:
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     cx = (x1 + x2) / 2
                     cy = (y1 + y2) / 2
@@ -135,7 +129,7 @@ class HumanMovementDetector:
         boxes = []
         for r in results:
             for box in r.boxes:
-                if int(box.cls[0]) == 0:  # Person class
+                if int(box.cls[0]) == 0:
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     boxes.append((x1, y1, x2, y2))
         return boxes
@@ -159,7 +153,7 @@ class HumanMovementDetector:
         
     def is_in_monitoring_zone(self, person_box):
         if not self.monitoring_zones:
-            return True  # No zones defined, monitor everything
+            return True
             
         x, y = person_box
         for zone in self.monitoring_zones:
@@ -173,28 +167,21 @@ class HumanMovementDetector:
         if not self.privacy_blur:
             return frame
 
-        # Create a blurred copy of the entire frame
         blurred = cv2.GaussianBlur(frame, (45, 45), 0)
         
-        # Create a mask (black image)
         mask = np.zeros(frame.shape[:2], dtype=np.uint8)
         
-        # Draw white rectangles on the mask for alert areas
         for x1, y1, x2, y2 in alert_boxes:
             cv2.rectangle(mask, (int(x1), int(y1)), (int(x2), int(y2)), 255, -1)
         
-        # Dilate the mask to include a little extra area around alerts
         kernel = np.ones((20, 20), np.uint8)
         mask = cv2.dilate(mask, kernel, iterations=1)
         
-        # Create inverse mask
         mask_inv = cv2.bitwise_not(mask)
         
-        # Extract regions
         fg = cv2.bitwise_and(frame, frame, mask=mask)
         bg = cv2.bitwise_and(blurred, blurred, mask=mask_inv)
         
-        # Combine regions
         result = cv2.add(fg, bg)
         
         return result
@@ -208,10 +195,8 @@ class HumanMovementDetector:
         
         log(f"[CONFIRMED THREAT] {threat_level} at {location}")
         
-        # Trigger any external alarm systems
         trigger_alarm_system(threat_level, location, image_path)
         
-        # Send email if configured
         if self.user_email:
             subject = f"🔴 ThreatSnap Alert – {threat_level} Threat"
             body = (
@@ -240,21 +225,18 @@ class HumanMovementDetector:
                 self.running = False
                 break
 
-            # Keep current frame for UI display
             self.current_frame = frame.copy()
             
             current_video_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
             if current_video_time - self.last_trigger_video_time < self.cooldown:
-                continue  # Skip frame due to cooldown
+                continue
 
             results = self.model(frame)
             curr_boxes = self.extract_person_boxes(results)
             full_boxes = self.extract_full_boxes(results)
             
-            # Update person tracker
             self.person_tracker.update(curr_boxes, frame)
             
-            # Save the frame to static directory for web display
             cv2.imwrite(current_frame_path, self.apply_privacy_mask(frame, full_boxes))
 
             movement_detected = False
@@ -269,7 +251,6 @@ class HumanMovementDetector:
                 image_filename = f"{timestamp_str}.jpg"
                 image_path = os.path.join(self.output_dir, image_filename)
                 
-                # Save the full frame for analysis
                 cv2.imwrite(image_path, frame)
 
                 analysis = process_screenshot(image_path)
@@ -286,21 +267,17 @@ class HumanMovementDetector:
                 log(f"[LOGGED] {image_filename} | Action: {analysis.get('action_required')} | Danger: {analysis.get('danger')}")
 
                 if analysis.get("action_required"):
-                    # Add to potential threats for confirmation
                     self.potential_threats.append({
                         "time": current_video_time,
                         "analysis": analysis,
                         "image_path": image_path
                     })
                     
-                    # Check if we have consecutive threats
                     if len(self.potential_threats) >= self.confirmation_threshold:
-                        # Confirmed threat, take action
                         self._handle_confirmed_threat(self.potential_threats[-1])
                         self.last_trigger_video_time = current_video_time
-                        self.potential_threats = []  # Reset after handling
+                        self.potential_threats = []
                 else:
-                    # Reset potential threats if a non-threat is detected
                     self.potential_threats = []
 
             else:
@@ -311,7 +288,6 @@ class HumanMovementDetector:
 
         cap.release()
         
-        # Clean up current frame file when video ends
         if os.path.exists(current_frame_path):
             try:
                 os.remove(current_frame_path)
@@ -337,9 +313,9 @@ class HumanMovementDetector:
 
 class SecuritySystem:
     def __init__(self):
-        self.cameras = {}  # Dictionary of camera_id: HumanMovementDetector
+        self.cameras = {}
         self.active_camera = None
-        self.idle_time = {}  # Track idle time for each camera
+        self.idle_time = {}
         
     def add_camera(self, camera_id, source):
         self.cameras[camera_id] = HumanMovementDetector(source)

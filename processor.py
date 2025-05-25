@@ -7,11 +7,9 @@ from datetime import datetime
 from openai import OpenAI
 from dotenv import load_dotenv, find_dotenv
 
-# Load environment variables early
 load_dotenv(find_dotenv())
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-# Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 def process_screenshot(image_path):
@@ -24,10 +22,8 @@ def process_screenshot(image_path):
     print(f"[PROCESSING] {image_path}")
 
     try:
-        # Prepare the image as base64
         image_base64 = _to_base64(image_path)
 
-        # Run analysis with enhanced system prompt for multiple threat levels
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -59,11 +55,9 @@ def process_screenshot(image_path):
             max_tokens=1000
         )
 
-        # Extract text and try to parse JSON
         raw_text = response.choices[0].message.content
         structured = _safe_parse_json(raw_text)
 
-        # If the model refused to analyze, flag it
         if "sorry" in raw_text.lower() or not structured:
             raise ValueError("Model refused or failed to respond with structured data.")
 
@@ -96,12 +90,10 @@ def process_screenshot(image_path):
             "raw_model_response": None
         }
 
-# Helper: convert image to base64 string
 def _to_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode('utf-8')
 
-# Helper: safely parse a JSON block from model output
 def _safe_parse_json(text):
     try:
         if text.startswith("```json"):
