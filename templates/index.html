@@ -285,18 +285,20 @@
       }
 
       .btn-icon {
-        background: var(--accent);
+        background: var(--primary);
         padding: 0.6rem;
         border-radius: var(--radius);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: var(--foreground); /* This will make the SVG icon white */
+        color: var(
+          --primary-foreground
+        ); /* This will make the SVG icon white */
       }
 
       .btn-icon:hover {
-        background: var(--secondary);
-        color: var(--primary); /* This will make the icon red on hover */
+        background: var(--accent);
+        color: var(--foreground); /* This will make the icon white on hover */
       }
 
       .btn:disabled {
@@ -1145,7 +1147,7 @@
             '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
         } else {
           iconSvg =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x="12" y="16" x2="12" y2="12"></line><line x="12" y="8" x2="12.01" y2="8"></line></svg>'
         }
 
         toastIcon.innerHTML = iconSvg
