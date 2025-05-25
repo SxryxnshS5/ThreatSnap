@@ -38,6 +38,7 @@ def process_screenshot(image_path):
                         "Do not identify or make assumptions about specific individuals. "
                         "Instead, describe visible people's posture (e.g., sitting, running), visible object types "
                         "(e.g., bags, tools, weapons), and potential threats. Return the following fields:\n"
+                        "- summary: brief description of what's happening in the image\n"
                         "- profiles: list of descriptions of each human\n"
                         "- weapons: list of any objects resembling weapons\n"
                         "- danger: categorize as 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'\n"
@@ -70,6 +71,7 @@ def process_screenshot(image_path):
             "status": "success",
             "timestamp": timestamp,
             "image_path": image_path,
+            "summary": structured.get("summary", "No summary available."),
             "profiles": structured.get("profiles", []),
             "weapons": structured.get("weapons", []),
             "danger": structured.get("danger", "LOW"),
@@ -85,6 +87,7 @@ def process_screenshot(image_path):
             "timestamp": timestamp,
             "image_path": image_path,
             "error": str(e),
+            "summary": "Unable to analyze due to error.",
             "profiles": [],
             "weapons": [],
             "danger": "Unable to analyze due to error.",
