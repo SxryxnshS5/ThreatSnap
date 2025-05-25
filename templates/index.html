@@ -235,6 +235,12 @@
         border-radius: 50%;
       }
 
+      /* Add this to your style section */
+      .video-container,
+      .zone-tools {
+        display: none !important;
+      }
+
       .btn {
         display: inline-flex;
         align-items: center;
@@ -279,18 +285,20 @@
       }
 
       .btn-icon {
-        background: var(--accent);
+        background: var(--primary);
         padding: 0.6rem;
         border-radius: var(--radius);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: var(--foreground); /* This will make the SVG icon white */
+        color: var(
+          --primary-foreground
+        ); /* This will make the SVG icon white */
       }
 
       .btn-icon:hover {
-        background: var(--secondary);
-        color: var(--primary); /* This will make the icon red on hover */
+        background: var(--accent);
+        color: var(--foreground); /* This will make the icon white on hover */
       }
 
       .btn:disabled {
@@ -337,6 +345,10 @@
 
       .danger-high {
         color: #ef4444;
+      }
+
+      .danger-critical {
+        color: #be123c;
       }
 
       .status-badge {
@@ -390,7 +402,7 @@
         background: var(--card);
         border-radius: var(--radius);
         padding: 0;
-        max-width: 600px;
+        max-width: 800px;
         width: 100%;
         max-height: 90vh;
         overflow-y: auto;
@@ -452,6 +464,12 @@
         opacity: 1;
       }
 
+      .privacy-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
       @media (max-width: 768px) {
         body {
           padding: 1rem;
@@ -467,23 +485,43 @@
     <div class="container">
       <div class="page-header">
         <h1>ThreatSnap</h1>
-        <button class="btn btn-icon" onclick="toggleInfo()">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 16v-4"></path>
-            <path d="M12 8h.01"></path>
-          </svg>
-        </button>
+        <div style="display: flex; align-items: center; gap: 0.75rem">
+          <a href="/analytics" class="btn btn-secondary">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style="margin-right: 6px"
+            >
+              <path d="M3 3v18h18"></path>
+              <path d="m19 9-5 5-4-4-3 3"></path>
+            </svg>
+            Analytics
+          </a>
+          <button class="btn btn-icon" onclick="toggleInfo()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="alert alert-warning">
@@ -507,7 +545,8 @@
           </svg>
         </div>
         <div>
-          First time using ThreatSnap? Click the info button to learn more.
+          First time using ThreatSnap? Click the info button on top right to
+          learn more.
         </div>
       </div>
 
@@ -596,6 +635,27 @@
           </div>
 
           <div class="form-group">
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="privacyBlur" class="checkbox" />
+              <label for="privacyBlur" class="form-label"
+                >Enable privacy blur (only show detected people)</label
+              >
+            </div>
+          </div>
+
+          <!-- Change this div -->
+          <div class="form-group" style="display: none">
+            <label for="zoneSetup" class="form-label"></label>
+            <div class="video-container">
+              <canvas id="videoCanvas" width="0" height="0"></canvas>
+              <div class="zone-tools">
+                <button id="startDrawingBtn" class="btn btn-secondary"></button>
+                <button id="clearZonesBtn" class="btn btn-destructive"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
             <div class="btn-group">
               <button id="startBtn" class="btn btn-primary">
                 <svg
@@ -652,6 +712,24 @@
                 Reset Data
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Current Frame</h3>
+        </div>
+        <div class="card-content">
+          <div
+            style="display: flex; justify-content: center; align-items: center"
+          >
+            <img
+              id="liveFeed"
+              src="/current_frame"
+              alt="Live feed"
+              style="max-width: 100%; border-radius: var(--radius)"
+            />
           </div>
         </div>
       </div>
@@ -758,22 +836,25 @@
             <strong>dangerous situations</strong> by analyzing
             <strong>human movement</strong> in CCTV footage. It's designed to
             run <strong>offline</strong> on local devices and works even without
-            internet.
+            internet (if we use a locally hosted AI model for analyzing).
           </p>
           <p>
             This demo version works with sample video files and shows how the
             system can monitor scenes, identify suspicious activity, and send
             alerts when needed.
           </p>
-          <p>In the future, we plan to add features like:</p>
+          <p>Features include:</p>
           <ul style="padding-left: 1.5rem; margin-bottom: 1rem">
-            <li>Support for <strong>live CCTV camera feeds</strong></li>
             <li>
-              <strong>User accounts</strong> to manage alert settings and logs
+              <strong>Multi-level threat detection</strong> (Low, Medium, High,
+              Critical)
             </li>
+            <li><strong>Privacy masking</strong> to blur non-relevant areas</li>
+            <li><strong>Person tracking</strong> across video frames</li>
+            <li><strong>Advanced analytics</strong> for security insights</li>
             <li>
-              <strong>Cloud or hybrid storage</strong> for threat reports and
-              analytics
+              <strong>External alarm system</strong> connectivity for immediate
+              physical response
             </li>
           </ul>
           <p><strong>How to use:</strong></p>
@@ -785,6 +866,39 @@
             <li>Screenshots are analyzed for risky or dangerous behavior</li>
             <li>If a threat is found, an email alert is sent (if enabled)</li>
           </ol>
+          <p><strong>Technical details:</strong></p>
+          <ul style="padding-left: 1.5rem; margin-bottom: 1rem">
+            <li>Built with Python backend and HTML/CSS/JavaScript frontend</li>
+            <li>Uses computer vision to detect motion changes in video</li>
+            <li>AI analysis of detected scenes for threat assessment</li>
+            <li>
+              Supports local video files with plans for real-time CCTV
+              integration
+            </li>
+          </ul>
+          <p><strong>Future improvements:</strong></p>
+          <ul style="padding-left: 1.5rem">
+            <li>
+              Optimizing the detector for more efficient and accurate
+              screenshots
+            </li>
+            <li>
+              Reducing false positives through advanced machine learning models
+            </li>
+            <li>
+              Real-time analysis to minimize lag between detection and
+              notification
+            </li>
+            <li>Mobile application for remote monitoring and alerts</li>
+            <li>Integration with existing security infrastructure</li>
+          </ul>
+          <p>
+            <em
+              >This project was developed as a hackathon submission to
+              demonstrate the potential of AI-powered security monitoring
+              systems that prioritize privacy and local processing.</em
+            >
+          </p>
         </div>
       </div>
     </div>
@@ -834,7 +948,13 @@
     </div>
 
     <script>
-      let logInterval, alertInterval, allLogInterval
+      let logInterval, alertInterval, allLogInterval, liveFrameInterval
+      let zones = []
+      let drawingZone = false
+      let currentZone = {}
+      let videoCanvas = document.getElementById('videoCanvas')
+      let ctx = videoCanvas.getContext('2d')
+      let previousMonitoringStatus = null
 
       function toggleInfo() {
         const modal = document.getElementById('infoModal')
@@ -851,7 +971,21 @@
         }
       }
 
-      // Add this function to handle clicks outside the modal
+      function updateIntervals(running) {
+        if (running) {
+          // Start the live feed refresh if not already running
+          if (!liveFrameInterval) {
+            liveFrameInterval = setInterval(refreshLiveFeed, 1000)
+          }
+        } else {
+          // Clear the interval if monitoring stopped
+          if (liveFrameInterval) {
+            clearInterval(liveFrameInterval)
+            liveFrameInterval = null
+          }
+        }
+      }
+
       function setupModalOutsideClicks() {
         const modal = document.getElementById('infoModal')
         const confirmModal = document.getElementById('confirmModal')
@@ -872,9 +1006,6 @@
         })
       }
 
-      // Add this line at the bottom of your script section, before or after the interval setup
-      document.addEventListener('DOMContentLoaded', setupModalOutsideClicks)
-
       function toggleEmailField(enabled) {
         document.getElementById('emailField').style.display = enabled
           ? 'block'
@@ -888,13 +1019,145 @@
             .value === 'yes'
         const viewer = document.getElementById('videoViewer')
         const player = document.getElementById('videoPlayer')
+
         if (filename && previewEnabled) {
           player.src = `/static/videos/${filename}`
           viewer.style.display = 'block'
+
+          // Load video into canvas for zone drawing
+          player.onloadedmetadata = function () {
+            videoCanvas.width = player.videoWidth
+            videoCanvas.height = player.videoHeight
+            drawVideoFrame()
+          }
         } else {
           viewer.style.display = 'none'
           player.src = ''
         }
+      }
+
+      function startDrawingZone() {
+        drawingZone = true
+        videoCanvas.classList.add('drawing-active')
+        document.getElementById('startDrawingBtn').disabled = true
+      }
+
+      function clearZones() {
+        zones = []
+        drawVideoFrame()
+        showToast('Monitoring zones cleared', 'info')
+      }
+
+      function drawVideoFrame() {
+        const player = document.getElementById('videoPlayer')
+
+        // Draw video frame
+        if (player.src) {
+          ctx.drawImage(player, 0, 0, videoCanvas.width, videoCanvas.height)
+        } else {
+          // Draw black background if no video
+          ctx.fillStyle = '#000'
+          ctx.fillRect(0, 0, videoCanvas.width, videoCanvas.height)
+        }
+
+        // Draw zones
+        zones.forEach((zone) => {
+          ctx.strokeStyle = 'red'
+          ctx.lineWidth = 2
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'
+          ctx.fillRect(zone.x, zone.y, zone.width, zone.height)
+          ctx.strokeRect(zone.x, zone.y, zone.width, zone.height)
+        })
+      }
+
+      // Setup zone drawing
+      videoCanvas.addEventListener('mousedown', (e) => {
+        if (!drawingZone) return
+
+        const rect = videoCanvas.getBoundingClientRect()
+        const scaleX = videoCanvas.width / rect.width
+        const scaleY = videoCanvas.height / rect.height
+
+        currentZone.x = (e.clientX - rect.left) * scaleX
+        currentZone.y = (e.clientY - rect.top) * scaleY
+        currentZone.startX = currentZone.x
+        currentZone.startY = currentZone.y
+      })
+
+      videoCanvas.addEventListener('mousemove', (e) => {
+        if (!drawingZone || !currentZone.hasOwnProperty('startX')) return
+
+        const rect = videoCanvas.getBoundingClientRect()
+        const scaleX = videoCanvas.width / rect.width
+        const scaleY = videoCanvas.height / rect.height
+        const currX = (e.clientX - rect.left) * scaleX
+        const currY = (e.clientY - rect.top) * scaleY
+
+        // Calculate dimensions
+        currentZone.width = currX - currentZone.startX
+        currentZone.height = currY - currentZone.startY
+
+        // Redraw
+        drawVideoFrame()
+
+        // Draw current zone
+        ctx.strokeStyle = 'yellow'
+        ctx.lineWidth = 2
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.2)'
+        ctx.fillRect(
+          currentZone.x,
+          currentZone.y,
+          currentZone.width,
+          currentZone.height
+        )
+        ctx.strokeRect(
+          currentZone.x,
+          currentZone.y,
+          currentZone.width,
+          currentZone.height
+        )
+      })
+
+      videoCanvas.addEventListener('mouseup', (e) => {
+        if (!drawingZone || !currentZone.hasOwnProperty('startX')) return
+
+        const rect = videoCanvas.getBoundingClientRect()
+        const scaleX = videoCanvas.width / rect.width
+        const scaleY = videoCanvas.height / rect.height
+
+        // Ensure width and height are positive
+        if (currentZone.width < 0) {
+          currentZone.x += currentZone.width
+          currentZone.width = Math.abs(currentZone.width)
+        }
+
+        if (currentZone.height < 0) {
+          currentZone.y += currentZone.height
+          currentZone.height = Math.abs(currentZone.height)
+        }
+
+        zones.push({
+          x: currentZone.x,
+          y: currentZone.y,
+          width: currentZone.width,
+          height: currentZone.height,
+        })
+
+        drawingZone = false
+        videoCanvas.classList.remove('drawing-active')
+        document.getElementById('startDrawingBtn').disabled = false
+        currentZone = {}
+
+        drawVideoFrame()
+        showToast(`Zone ${zones.length} added`, 'success')
+      })
+
+      function saveZones() {
+        fetch('/save-zones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zones }),
+        })
       }
 
       function showToast(message, type = 'info') {
@@ -918,7 +1181,7 @@
             '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
         } else {
           iconSvg =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x="12" y="16" x2="12" y2="12"></line><line x="12" y="8" x2="12.01" y2="8"></line></svg>'
         }
 
         toastIcon.innerHTML = iconSvg
@@ -961,17 +1224,47 @@
       }
 
       async function fetchStatus() {
-        const res = await fetch('/status')
-        const data = await res.json()
-        const running = data.running
-        document.getElementById('monitoringStatus').innerHTML = running
-          ? '<div class="status-badge status-running"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is active</div>'
-          : '<div class="status-badge status-stopped"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is inactive</div>'
-        document.getElementById('startBtn').disabled = running
-        document.getElementById('filename').disabled = running
-        document.getElementById('email').disabled = running
-        document.getElementById('enableEmail').disabled = running
-        document.getElementById('stopBtn').disabled = !running
+        try {
+          const res = await fetch('/status')
+          const data = await res.json()
+          const running = data.running
+
+          // Check if status has changed from running to stopped
+          if (previousMonitoringStatus === true && running === false) {
+            showToast('Monitoring has ended', 'info')
+          }
+
+          // Update previous status
+          previousMonitoringStatus = running
+
+          document.getElementById('monitoringStatus').innerHTML = running
+            ? '<div class="status-badge status-running"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is active</div>'
+            : '<div class="status-badge status-stopped"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is inactive</div>'
+
+          // Update button states
+          document.getElementById('startBtn').disabled = running
+          document.getElementById('filename').disabled = running
+          document.getElementById('email').disabled = running
+          document.getElementById('enableEmail').disabled = running
+          document.getElementById('stopBtn').disabled = !running
+          document.getElementById('startDrawingBtn').disabled = running
+          document.getElementById('clearZonesBtn').disabled = running
+          document.getElementById('privacyBlur').disabled = running
+
+          // Update intervals based on monitoring status
+          updateIntervals(running)
+
+          // Reset live feed if monitoring is stopped
+          if (!running) {
+            resetLiveFeed()
+          }
+
+          return running
+        } catch (error) {
+          console.error('Error fetching status:', error)
+          resetLiveFeed() // Reset on error
+          return false
+        }
       }
 
       document.getElementById('startBtn').onclick = async () => {
@@ -980,13 +1273,23 @@
           ? document.getElementById('email').value
           : null
         const filename = document.getElementById('filename').value
+        const privacyBlur = document.getElementById('privacyBlur').checked
+
         if (!filename) {
           return showToast('Please select a video file.', 'error')
         }
+
+        // Save zones before starting
+        saveZones()
+
         const res = await fetch('/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, filename }),
+          body: JSON.stringify({
+            email,
+            filename,
+            privacy_blur: privacyBlur,
+          }),
         })
         const data = await res.json()
         showToast(
@@ -1001,9 +1304,12 @@
         await res.json()
         showToast('Monitoring stopped.', 'warning')
         fetchStatus()
+        resetLiveFeed() // Immediately reset the live feed
       }
 
       document.getElementById('resetBtn').onclick = showConfirmModal
+      document.getElementById('startDrawingBtn').onclick = startDrawingZone
+      document.getElementById('clearZonesBtn').onclick = clearZones
 
       async function fetchLogs() {
         const res = await fetch('/logs/live')
@@ -1021,7 +1327,9 @@
         } else {
           data.forEach((entry) => {
             const dangerClass =
-              entry.analysis.danger === 'HIGH'
+              entry.analysis.danger === 'CRITICAL'
+                ? 'danger-critical'
+                : entry.analysis.danger === 'HIGH'
                 ? 'danger-high'
                 : entry.analysis.danger === 'MEDIUM'
                 ? 'danger-medium'
@@ -1036,7 +1344,17 @@
                 </span>
               </div>
               <div style="margin-top: 0.5rem;">
-                <a href="/images/${entry.image}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                <strong>Action: </strong>${entry.analysis.recommended_response}
+              </div>
+              <div style="margin-top: 0.5rem;">
+                <strong>Summary: </strong>${
+                  entry.analysis.summary || 'No summary available.'
+                }
+              </div>
+              <div style="margin-top: 0.5rem;">
+                <a href="/images/${
+                  entry.image
+                }" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -1044,7 +1362,9 @@
                   </svg>
                   View Image
                 </a>
-                <a href="/images/${entry.timestamp}.json" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem; margin-left: 0.5rem;">
+                <a href="/images/${
+                  entry.timestamp
+                }.json" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem; margin-left: 0.5rem;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -1071,7 +1391,9 @@
         } else {
           data.forEach((entry) => {
             const dangerClass =
-              entry.analysis.danger === 'HIGH'
+              entry.analysis.danger === 'CRITICAL'
+                ? 'danger-critical'
+                : entry.analysis.danger === 'HIGH'
                 ? 'danger-high'
                 : entry.analysis.danger === 'MEDIUM'
                 ? 'danger-medium'
@@ -1111,11 +1433,53 @@
         }
       }
 
-      // Start fetch intervals
+      function refreshLiveFeed() {
+        const img = document.getElementById('liveFeed')
+        const timestamp = new Date().getTime()
+        fetch('/status')
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.running) {
+              // Only update image if monitoring is running
+              img.src = `/current_frame?t=${timestamp}`
+            } else {
+              // Reset to placeholder when monitoring is not running
+              resetLiveFeed()
+            }
+          })
+          .catch((error) => {
+            console.error('Error checking status:', error)
+            resetLiveFeed() // Also reset on error
+          })
+      }
+
+      function resetLiveFeed() {
+        const img = document.getElementById('liveFeed')
+        // Set a placeholder image or message for idle state
+        img.src =
+          'data:image/svg+xml;charset=utf-8,' +
+          encodeURIComponent(`
+      <svg width="640" height="360" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#111113"/>
+        <text x="50%" y="50%" font-family="Inter, sans-serif" font-size="14" 
+          fill="#a1a1aa" text-anchor="middle" dominant-baseline="middle">
+          Current frame isn't available. Start monitoring to view.
+        </text>
+      </svg>
+    `)
+      }
+
       logInterval = setInterval(fetchLogs, 500)
       alertInterval = setInterval(fetchCriticalAlerts, 500)
       allLogInterval = setInterval(fetchAllLogs, 500)
+      document.addEventListener('DOMContentLoaded', () => {
+        setupModalOutsideClicks()
+        drawVideoFrame()
+        fetchStatus()
+        resetLiveFeed() // Initialize with placeholder
+      })
       setInterval(fetchStatus, 500)
+
       fetchLogs()
       fetchCriticalAlerts()
       fetchAllLogs()
