@@ -75,9 +75,7 @@
         </div>
       </div>
 
-      <div id="monitoringStatus">
-        <!-- Status will be inserted here -->
-      </div>
+      <div id="monitoringStatus"></div>
 
       <div class="card">
         <div class="card-header">
@@ -99,7 +97,9 @@
           </div>
 
           <div class="form-group" id="emailField" style="display: none">
-            <label for="email" class="form-label">Email for alerts</label>
+            <label for="email" class="form-label"
+              >Email for alerts (check spam folder)</label
+            >
             <div class="input-wrapper">
               <input
                 type="email"
@@ -168,7 +168,6 @@
             </div>
           </div>
 
-          <!-- Change this div -->
           <div class="form-group" style="display: none">
             <label for="zoneSetup" class="form-label"></label>
             <div class="video-container">
@@ -288,9 +287,7 @@
           </h3>
         </div>
         <div class="card-content">
-          <ul id="criticalList" class="logs-list">
-            <!-- Alerts will be inserted here -->
-          </ul>
+          <ul id="criticalList" class="logs-list"></ul>
         </div>
       </div>
 
@@ -319,14 +316,11 @@
           </h3>
         </div>
         <div class="card-content">
-          <ul id="allLogsList" class="logs-list">
-            <!-- Logs will be inserted here -->
-          </ul>
+          <ul id="allLogsList" class="logs-list"></ul>
         </div>
       </div>
     </div>
 
-    <!-- Info Modal -->
     <div class="modal" id="infoModal">
       <div class="modal-content">
         <div class="card-header">
@@ -421,7 +415,6 @@
       </div>
     </div>
 
-    <!-- Confirm Modal -->
     <div class="modal" id="confirmModal">
       <div class="modal-content" style="max-width: 400px">
         <div class="card-header">
@@ -459,7 +452,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast">
       <div id="toastIcon"></div>
       <div id="toastMessage"></div>

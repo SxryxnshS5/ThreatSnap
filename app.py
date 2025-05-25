@@ -25,7 +25,6 @@ def cleanup_old_data():
     cleanup_count = 0
     for filename in os.listdir(SAVE_DIR):
         try:
-            # Extract timestamp from filename (assuming YYYYMMDD_HHMMSS format)
             if not filename.endswith((".jpg", ".json")):
                 continue
                 
@@ -46,7 +45,7 @@ def start_cleanup_task():
     def cleanup_task():
         while True:
             cleanup_old_data()
-            time.sleep(86400)  # Run once per day
+            time.sleep(86400)
             
     thread = threading.Thread(target=cleanup_task)
     thread.daemon = True
@@ -85,7 +84,6 @@ def start_detection():
 
     detector = HumanMovementDetector(video_source=video_path)
     
-    # Set monitoring zones if provided
     if zones:
         detector.set_monitoring_zones(zones)
         
@@ -153,7 +151,6 @@ def live_logs():
 def analytics():
     logs = []
     try:
-        # Look for logs in the saves directory
         for filename in os.listdir("static/saves"):
             if filename.endswith(".json"):
                 with open(os.path.join("static/saves", filename), "r") as f:
@@ -162,7 +159,6 @@ def analytics():
     except Exception as e:
         print(f"Error loading logs: {e}")
 
-    # Sort logs by timestamp (newest first)
     logs = sorted(logs, key=lambda x: x["timestamp"], reverse=True)
     
     total_alerts = len(logs)
@@ -172,39 +168,30 @@ def analytics():
     response_actions = {}
     objects_detected = {}
     
-    # Process the logs to extract data for analytics
     for log in logs:
         analysis = log.get("analysis", {})
         
-        # Count by danger level
         danger = analysis.get("danger", "LOW")
         danger_levels[danger] = danger_levels.get(danger, 0) + 1
         
-        # Group by hour for time analysis (format: YYYYMMDD_HH)
         hour = log["timestamp"][:9]
         hourly_breakdown[hour] = hourly_breakdown.get(hour, 0) + 1
         
-        # Count weapons detected
         for weapon in analysis.get("weapons", []):
             weapons_detected[weapon] = weapons_detected.get(weapon, 0) + 1
         
-        # Extract profile descriptions for objects detected
         for profile in analysis.get("profiles", []):
             desc = profile.get("description", "Unknown person")
-            # Take first part of description to categorize
             parts = desc.split(',')
             if parts:
                 key = parts[0].strip()
                 objects_detected[key] = objects_detected.get(key, 0) + 1
                 
-        # Count recommended actions
         if analysis.get("recommended_response"):
-            # Extract first sentence for categorization
             response = analysis["recommended_response"].split(".")[0] + "."
             response_actions[response] = response_actions.get(response, 0) + 1
     
-    # Include the detailed incidents for the timeline
-    detailed_incidents = logs[:20]  # Show only the 20 most recent logs
+    detailed_incidents = logs[:20]
     
     return render_template(
         "analytics.html",
@@ -245,7 +232,6 @@ def stop_all_cameras():
     security_system.stop_monitoring()
     return jsonify({"status": "success"})
 
-# Alternative to @app.before_first_request for newer Flask versions
 @app.before_request
 def before_request_func():
     global cleanup_task_started

@@ -23,12 +23,10 @@ function toggleInfo() {
 
 function updateIntervals(running) {
   if (running) {
-    // Start the live feed refresh if not already running
     if (!liveFrameInterval) {
       liveFrameInterval = setInterval(refreshLiveFeed, 1000)
     }
   } else {
-    // Clear the interval if monitoring stopped
     if (liveFrameInterval) {
       clearInterval(liveFrameInterval)
       liveFrameInterval = null
@@ -40,15 +38,12 @@ function setupModalOutsideClicks() {
   const modal = document.getElementById('infoModal')
   const confirmModal = document.getElementById('confirmModal')
 
-  // Close modal when clicking outside content area
   modal.addEventListener('click', (e) => {
-    // Check if click is directly on the modal backdrop (not its children)
     if (e.target === modal) {
       toggleInfo()
     }
   })
 
-  // Same for confirm modal
   confirmModal.addEventListener('click', (e) => {
     if (e.target === confirmModal) {
       confirmReset(false)
@@ -74,7 +69,6 @@ function handleVideoPreview() {
     player.src = `/static/videos/${filename}`
     viewer.style.display = 'block'
 
-    // Load video into canvas for zone drawing
     player.onloadedmetadata = function () {
       videoCanvas.width = player.videoWidth
       videoCanvas.height = player.videoHeight
@@ -101,16 +95,13 @@ function clearZones() {
 function drawVideoFrame() {
   const player = document.getElementById('videoPlayer')
 
-  // Draw video frame
   if (player.src) {
     ctx.drawImage(player, 0, 0, videoCanvas.width, videoCanvas.height)
   } else {
-    // Draw black background if no video
     ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, videoCanvas.width, videoCanvas.height)
   }
 
-  // Draw zones
   zones.forEach((zone) => {
     ctx.strokeStyle = 'red'
     ctx.lineWidth = 2
@@ -120,7 +111,6 @@ function drawVideoFrame() {
   })
 }
 
-// Setup zone drawing
 videoCanvas.addEventListener('mousedown', (e) => {
   if (!drawingZone) return
 
@@ -143,14 +133,11 @@ videoCanvas.addEventListener('mousemove', (e) => {
   const currX = (e.clientX - rect.left) * scaleX
   const currY = (e.clientY - rect.top) * scaleY
 
-  // Calculate dimensions
   currentZone.width = currX - currentZone.startX
   currentZone.height = currY - currentZone.startY
 
-  // Redraw
   drawVideoFrame()
 
-  // Draw current zone
   ctx.strokeStyle = 'yellow'
   ctx.lineWidth = 2
   ctx.fillStyle = 'rgba(255, 255, 0, 0.2)'
@@ -175,7 +162,6 @@ videoCanvas.addEventListener('mouseup', (e) => {
   const scaleX = videoCanvas.width / rect.width
   const scaleY = videoCanvas.height / rect.height
 
-  // Ensure width and height are positive
   if (currentZone.width < 0) {
     currentZone.x += currentZone.width
     currentZone.width = Math.abs(currentZone.width)
@@ -215,10 +201,8 @@ function showToast(message, type = 'info') {
   const toastMessage = document.getElementById('toastMessage')
   const toastIcon = document.getElementById('toastIcon')
 
-  // Set message
   toastMessage.textContent = message
 
-  // Set icon based on type
   let iconSvg = ''
   if (type === 'success') {
     iconSvg =
@@ -236,10 +220,8 @@ function showToast(message, type = 'info') {
 
   toastIcon.innerHTML = iconSvg
 
-  // Show the toast
   toast.classList.add('show')
 
-  // Hide after 3 seconds
   setTimeout(() => {
     toast.classList.remove('show')
   }, 3000)
@@ -268,7 +250,6 @@ async function confirmReset(yes) {
   document.getElementById('criticalList').innerHTML = ''
   document.getElementById('allLogsList').innerHTML = ''
 
-  // Restart intervals to pick up new data after reset
   alertInterval = setInterval(fetchCriticalAlerts, 500)
   allLogInterval = setInterval(fetchAllLogs, 500)
 }
@@ -279,19 +260,16 @@ async function fetchStatus() {
     const data = await res.json()
     const running = data.running
 
-    // Check if status has changed from running to stopped
     if (previousMonitoringStatus === true && running === false) {
       showToast('Monitoring has ended', 'info')
     }
 
-    // Update previous status
     previousMonitoringStatus = running
 
     document.getElementById('monitoringStatus').innerHTML = running
       ? '<div class="status-badge status-running"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is active</div>'
       : '<div class="status-badge status-stopped"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is inactive</div>'
 
-    // Update button states
     document.getElementById('startBtn').disabled = running
     document.getElementById('filename').disabled = running
     document.getElementById('email').disabled = running
@@ -301,10 +279,8 @@ async function fetchStatus() {
     document.getElementById('clearZonesBtn').disabled = running
     document.getElementById('privacyBlur').disabled = running
 
-    // Update intervals based on monitoring status
     updateIntervals(running)
 
-    // Reset live feed if monitoring is stopped
     if (!running) {
       resetLiveFeed()
     }
@@ -312,7 +288,7 @@ async function fetchStatus() {
     return running
   } catch (error) {
     console.error('Error fetching status:', error)
-    resetLiveFeed() // Reset on error
+    resetLiveFeed()
     return false
   }
 }
@@ -327,7 +303,6 @@ document.getElementById('startBtn').onclick = async () => {
     return showToast('Please select a video file.', 'error')
   }
 
-  // Save zones before starting
   saveZones()
 
   const res = await fetch('/start', {
@@ -349,7 +324,7 @@ document.getElementById('stopBtn').onclick = async () => {
   await res.json()
   showToast('Monitoring stopped.', 'warning')
   fetchStatus()
-  resetLiveFeed() // Immediately reset the live feed
+  resetLiveFeed()
 }
 
 document.getElementById('resetBtn').onclick = showConfirmModal
@@ -485,22 +460,18 @@ function refreshLiveFeed() {
     .then((response) => response.json())
     .then((data) => {
       if (data.running) {
-        // Only update image if monitoring is running
         img.src = `/current_frame?t=${timestamp}`
       } else {
-        // Reset to placeholder when monitoring is not running
         resetLiveFeed()
       }
     })
     .catch((error) => {
       console.error('Error checking status:', error)
-      resetLiveFeed() // Also reset on error
     })
 }
 
 function resetLiveFeed() {
   const img = document.getElementById('liveFeed')
-  // Set a placeholder image or message for idle state
   img.src =
     'data:image/svg+xml;charset=utf-8,' +
     encodeURIComponent(`
@@ -521,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupModalOutsideClicks()
   drawVideoFrame()
   fetchStatus()
-  resetLiveFeed() // Initialize with placeholder
+  resetLiveFeed()
 })
 setInterval(fetchStatus, 500)
 
