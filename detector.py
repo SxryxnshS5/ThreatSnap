@@ -230,6 +230,9 @@ class HumanMovementDetector:
     def _detect_loop(self):
         cap = cv2.VideoCapture(self.video_source)
         log(f"[STARTED] Monitoring source: {self.video_source}")
+        
+        current_frame_path = "static/current_frame.jpg"
+        
         while self.running and cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -252,7 +255,7 @@ class HumanMovementDetector:
             self.person_tracker.update(curr_boxes, frame)
             
             # Save the frame to static directory for web display
-            cv2.imwrite("static/current_frame.jpg", self.apply_privacy_mask(frame, full_boxes))
+            cv2.imwrite(current_frame_path, self.apply_privacy_mask(frame, full_boxes))
 
             movement_detected = False
             for box in curr_boxes:
@@ -307,6 +310,15 @@ class HumanMovementDetector:
             time.sleep(0.05)
 
         cap.release()
+        
+        # Clean up current frame file when video ends
+        if os.path.exists(current_frame_path):
+            try:
+                os.remove(current_frame_path)
+                log("[CLEANUP] Removed current frame file")
+            except Exception as e:
+                log(f"[ERROR] Failed to remove current frame file: {e}")
+        
         log("[STOPPED] Monitoring session ended.")
 
     def start(self, email=None, privacy_blur=False):
