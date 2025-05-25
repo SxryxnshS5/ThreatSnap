@@ -921,6 +921,7 @@
       let currentZone = {}
       let videoCanvas = document.getElementById('videoCanvas')
       let ctx = videoCanvas.getContext('2d')
+      let previousMonitoringStatus = null
 
       function toggleInfo() {
         const modal = document.getElementById('infoModal')
@@ -1194,6 +1195,14 @@
           const res = await fetch('/status')
           const data = await res.json()
           const running = data.running
+
+          // Check if status has changed from running to stopped
+          if (previousMonitoringStatus === true && running === false) {
+            showToast('Monitoring has ended', 'info')
+          }
+
+          // Update previous status
+          previousMonitoringStatus = running
 
           document.getElementById('monitoringStatus').innerHTML = running
             ? '<div class="status-badge status-running"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is active</div>'
