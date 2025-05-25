@@ -151,53 +151,70 @@ def live_logs():
 
 @app.route("/analytics")
 def analytics():
-    # Analyze saved logs to generate statistics
-    total_alerts = 0
+    logs = []
+    try:
+        # Look for logs in the saves directory
+        for filename in os.listdir("static/saves"):
+            if filename.endswith(".json"):
+                with open(os.path.join("static/saves", filename), "r") as f:
+                    log_data = json.load(f)
+                    logs.append(log_data)
+    except Exception as e:
+        print(f"Error loading logs: {e}")
+
+    # Sort logs by timestamp (newest first)
+    logs = sorted(logs, key=lambda x: x["timestamp"], reverse=True)
+    
+    total_alerts = len(logs)
     danger_levels = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
-    weapons_detected = {}
     hourly_breakdown = {}
-    incidents = []
+    weapons_detected = {}
+    response_actions = {}
+    objects_detected = {}
     
-    for filename in os.listdir(SAVE_DIR):
-        if filename.endswith(".json"):
-            with open(os.path.join(SAVE_DIR, filename), "r") as f:
-                data = json.load(f)
+    # Process the logs to extract data for analytics
+    for log in logs:
+        analysis = log.get("analysis", {})
+        
+        # Count by danger level
+        danger = analysis.get("danger", "LOW")
+        danger_levels[danger] = danger_levels.get(danger, 0) + 1
+        
+        # Group by hour for time analysis (format: YYYYMMDD_HH)
+        hour = log["timestamp"][:9]
+        hourly_breakdown[hour] = hourly_breakdown.get(hour, 0) + 1
+        
+        # Count weapons detected
+        for weapon in analysis.get("weapons", []):
+            weapons_detected[weapon] = weapons_detected.get(weapon, 0) + 1
+        
+        # Extract profile descriptions for objects detected
+        for profile in analysis.get("profiles", []):
+            desc = profile.get("description", "Unknown person")
+            # Take first part of description to categorize
+            parts = desc.split(',')
+            if parts:
+                key = parts[0].strip()
+                objects_detected[key] = objects_detected.get(key, 0) + 1
                 
-                # Count alerts
-                if data.get("analysis", {}).get("action_required"):
-                    total_alerts += 1
-                
-                # Count danger levels
-                danger = data.get("analysis", {}).get("danger")
-                if danger in danger_levels:
-                    danger_levels[danger] += 1
-                
-                # Count weapons
-                for weapon in data.get("analysis", {}).get("weapons", []):
-                    weapons_detected[weapon] = weapons_detected.get(weapon, 0) + 1
-                
-                # Hourly breakdown
-                hour = data.get("timestamp", "")[:13]  # Extract YYYYMMDD_HH
-                hourly_breakdown[hour] = hourly_breakdown.get(hour, 0) + 1
-                
-                # Build incident timeline
-                if data.get("analysis", {}).get("action_required") or danger in ["HIGH", "CRITICAL"]:
-                    incidents.append({
-                        "timestamp": data.get("timestamp"),
-                        "level": danger,
-                        "description": data.get("analysis", {}).get("recommended_response", "No action specified")
-                    })
+        # Count recommended actions
+        if analysis.get("recommended_response"):
+            # Extract first sentence for categorization
+            response = analysis["recommended_response"].split(".")[0] + "."
+            response_actions[response] = response_actions.get(response, 0) + 1
     
-    # Sort incidents by timestamp, most recent first
-    incidents = sorted(incidents, key=lambda x: x["timestamp"], reverse=True)
+    # Include the detailed incidents for the timeline
+    detailed_incidents = logs[:20]  # Show only the 20 most recent logs
     
     return render_template(
-        "analytics.html", 
+        "analytics.html",
         total_alerts=total_alerts,
         danger_levels=danger_levels,
-        weapons_detected=weapons_detected,
         hourly_breakdown=hourly_breakdown,
-        incidents=incidents
+        weapons_detected=weapons_detected,
+        objects_detected=objects_detected,
+        action_summary=response_actions,
+        detailed_incidents=detailed_incidents
     )
 
 @app.route("/images/<filename>")

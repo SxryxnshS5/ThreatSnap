@@ -543,7 +543,8 @@
           </svg>
         </div>
         <div>
-          First time using ThreatSnap? Click the info button to learn more.
+          First time using ThreatSnap? Click the info button on top right to
+          learn more.
         </div>
       </div>
 
@@ -833,7 +834,7 @@
             <strong>dangerous situations</strong> by analyzing
             <strong>human movement</strong> in CCTV footage. It's designed to
             run <strong>offline</strong> on local devices and works even without
-            internet.
+            internet (if we use a local hosted AI model for analyzing).
           </p>
           <p>
             This demo version works with sample video files and shows how the
@@ -845,9 +846,6 @@
             <li>
               <strong>Multi-level threat detection</strong> (Low, Medium, High,
               Critical)
-            </li>
-            <li>
-              <strong>Zone-based monitoring</strong> to focus on specific areas
             </li>
             <li><strong>Privacy masking</strong> to blur non-relevant areas</li>
             <li><strong>Person tracking</strong> across video frames</li>
@@ -861,9 +859,6 @@
           <ol style="padding-left: 1.5rem">
             <li>Select a video file</li>
             <li>Enable email alerts if you want to get notified</li>
-            <li>
-              Draw monitoring zones if needed (or monitor the whole frame)
-            </li>
             <li>Click <em>Start Monitoring</em></li>
             <li>It will scan the video for movement and take screenshots</li>
             <li>Screenshots are analyzed for risky or dangerous behavior</li>
@@ -937,6 +932,21 @@
           setTimeout(() => {
             modal.style.opacity = '1'
           }, 10)
+        }
+      }
+
+      function updateIntervals(running) {
+        if (running) {
+          // Start the live feed refresh if not already running
+          if (!liveFrameInterval) {
+            liveFrameInterval = setInterval(refreshLiveFeed, 1000)
+          }
+        } else {
+          // Clear the interval if monitoring stopped
+          if (liveFrameInterval) {
+            clearInterval(liveFrameInterval)
+            liveFrameInterval = null
+          }
         }
       }
 
@@ -1178,22 +1188,39 @@
       }
 
       async function fetchStatus() {
-        const res = await fetch('/status')
-        const data = await res.json()
-        const running = data.running
-        document.getElementById('monitoringStatus').innerHTML = running
-          ? '<div class="status-badge status-running"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is active</div>'
-          : '<div class="status-badge status-stopped"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is inactive</div>'
+        try {
+          const res = await fetch('/status')
+          const data = await res.json()
+          const running = data.running
 
-        // Update button states
-        document.getElementById('startBtn').disabled = running
-        document.getElementById('filename').disabled = running
-        document.getElementById('email').disabled = running
-        document.getElementById('enableEmail').disabled = running
-        document.getElementById('stopBtn').disabled = !running
-        document.getElementById('startDrawingBtn').disabled = running
-        document.getElementById('clearZonesBtn').disabled = running
-        document.getElementById('privacyBlur').disabled = running
+          document.getElementById('monitoringStatus').innerHTML = running
+            ? '<div class="status-badge status-running"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is active</div>'
+            : '<div class="status-badge status-stopped"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Monitoring is inactive</div>'
+
+          // Update button states
+          document.getElementById('startBtn').disabled = running
+          document.getElementById('filename').disabled = running
+          document.getElementById('email').disabled = running
+          document.getElementById('enableEmail').disabled = running
+          document.getElementById('stopBtn').disabled = !running
+          document.getElementById('startDrawingBtn').disabled = running
+          document.getElementById('clearZonesBtn').disabled = running
+          document.getElementById('privacyBlur').disabled = running
+
+          // Update intervals based on monitoring status
+          updateIntervals(running)
+
+          // Reset live feed if monitoring is stopped
+          if (!running) {
+            resetLiveFeed()
+          }
+
+          return running
+        } catch (error) {
+          console.error('Error fetching status:', error)
+          resetLiveFeed() // Reset on error
+          return false
+        }
       }
 
       document.getElementById('startBtn').onclick = async () => {
@@ -1233,6 +1260,7 @@
         await res.json()
         showToast('Monitoring stopped.', 'warning')
         fetchStatus()
+        resetLiveFeed() // Immediately reset the live feed
       }
 
       document.getElementById('resetBtn').onclick = showConfirmModal
@@ -1355,19 +1383,48 @@
       function refreshLiveFeed() {
         const img = document.getElementById('liveFeed')
         const timestamp = new Date().getTime()
-        img.src = `/current_frame?t=${timestamp}`
+        fetch('/status')
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.running) {
+              // Only update image if monitoring is running
+              img.src = `/current_frame?t=${timestamp}`
+            } else {
+              // Reset to placeholder when monitoring is not running
+              resetLiveFeed()
+            }
+          })
+          .catch((error) => {
+            console.error('Error checking status:', error)
+            resetLiveFeed() // Also reset on error
+          })
       }
 
-      // Start fetch intervals
-      document.addEventListener('DOMContentLoaded', () => {
-        setupModalOutsideClicks()
-        drawVideoFrame()
-      })
+      function resetLiveFeed() {
+        const img = document.getElementById('liveFeed')
+        // Set a placeholder image or message for idle state
+        img.src =
+          'data:image/svg+xml;charset=utf-8,' +
+          encodeURIComponent(`
+      <svg width="640" height="360" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#111113"/>
+        <text x="50%" y="50%" font-family="Inter, sans-serif" font-size="14" 
+          fill="#a1a1aa" text-anchor="middle" dominant-baseline="middle">
+          Live feed inactive. Start monitoring to view.
+        </text>
+      </svg>
+    `)
+      }
 
       logInterval = setInterval(fetchLogs, 500)
       alertInterval = setInterval(fetchCriticalAlerts, 500)
       allLogInterval = setInterval(fetchAllLogs, 500)
-      liveFrameInterval = setInterval(refreshLiveFeed, 1000)
+      document.addEventListener('DOMContentLoaded', () => {
+        setupModalOutsideClicks()
+        drawVideoFrame()
+        fetchStatus()
+        resetLiveFeed() // Initialize with placeholder
+      })
       setInterval(fetchStatus, 500)
 
       fetchLogs()
