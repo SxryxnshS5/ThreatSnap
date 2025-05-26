@@ -202,6 +202,7 @@ class HumanMovementDetector:
             body = (
                 f"Timestamp: {analysis['timestamp']}\n\n"
                 f"Danger: {threat_level}\n\n"
+                f"Summary: {analysis.get('summary', 'No summary available')}\n\n"
                 f"Recommended Action: {analysis.get('recommended_response', 'Investigate')}\n\n"
                 "See attached image and log file for more information."
             )
