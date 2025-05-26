@@ -3,7 +3,7 @@
 **ThreatSnap** is a real-time threat monitoring system that detects dangerous human activity from CCTV footage. Built with Flask, YOLOv8, and OpenAI's GPT-4o, it automatically analyzes human movement in video files and sends email alerts when suspicious behavior is detected.
 
 > 🏆 Built for AmpliCode Hackathon 2025 under the **Security & Online Safety** track.
-> 🚀 Deployed on [Railway](https://threatsnap-production.up.railway.app/analytics)
+> 🚀 Deployed on [Railway](https://threatsnap-production.up.railway.app/)
 
 ---
 
@@ -11,22 +11,11 @@
 
 ThreatSnap focuses primarily on **backend technology** — combining real-time object detection, contextual AI analysis, and intelligent alerting — to build a meaningful safety solution. While a basic frontend dashboard is included for demonstration purposes, the **core innovation lies in the detection and analysis pipeline**.
 
-The backend system:
-
-* Uses **YOLOv8** to detect humans and movements in CCTV-like footage
-* Applies **OpenAI GPT-4o** to interpret human posture, weapon presence, and threat level
-* Sends **email alerts** with visual + textual logs when necessary
-* Organizes all detections for review and displays them in a structured log format
-* Categorizes alerts into **threat levels**: Low, Medium, High, and Critical
-* Includes **privacy masking** to blur non-relevant areas in the footage
-* Tracks individual persons across frames for enhanced analysis
-* Provides **advanced analytics** and supports **external alarm system** connectivity for real-time physical response
-
 ---
 
 ## 💡 Key Features
 
-* 📂 Monitors **existing video files** for human movement
+* 📂 Uses **YOLOv8** to detect humans and movements in CCTV-like footage
 * 🤖 Uses **GPT-4o** to analyze screenshots for dangerous behavior
 * ✉️ Sends detailed email alerts with images and structured threat logs
 * 🔒 Supports **privacy masking** and **multi-level threat detection**
