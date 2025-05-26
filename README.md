@@ -3,7 +3,7 @@
 **ThreatSnap** is a real-time threat monitoring system that detects dangerous human activity from CCTV footage. Built with Flask, YOLOv8, and OpenAI's GPT-4o, it automatically analyzes human movement in video files and sends email alerts when suspicious behavior is detected.
 
 > 🏆 Built for AmpliCode Hackathon 2025 under the **Security & Online Safety** track.
-> 🚀 Deployed on [Railway](https://railway.app)
+> 🚀 Deployed on [Railway](https://threatsnap-production.up.railway.app/analytics)
 
 ---
 
