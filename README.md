@@ -165,9 +165,7 @@ Then open:
 
 ## 📽 Demo Video
 
-> “Soon”
-
-🎬 [Demo Link – coming soon]
+🎬 [Demo Link](https://youtu.be/phVJSzzsDoc)
 
 ---
 
