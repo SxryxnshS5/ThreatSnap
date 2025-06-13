@@ -163,12 +163,6 @@ Then open:
 
 ---
 
-## 📽 Demo Video
-
-🎬 [Demo Link](https://youtu.be/phVJSzzsDoc)
-
----
-
 ## 📃 License
 
 MIT License © 2025 [Suryansh]
